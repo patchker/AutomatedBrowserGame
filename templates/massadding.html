@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Textarea Page</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+</head>
+<body>
+    <header>
+    <a href="/"><h1>patchker inc.</h1></a>
+</header>
+    <div class="cont">
+        <ul>
+    <a href="/"><li>HOME</li></a>
+    <a href="/lista"><li>LIST</li></a>
+    <a href="/wyslane"><li>SENT ATTACKS</li></a>
+    <a href="/niewyslane"><li>NOT SENT ATTACKS</li></a>
+        </ul>
+    </div>
+    <div class="container">
+        <form action="/process_text" method="POST">
+            <label for="input_text">Wprowadź tekst (plemiona-planer.pl - TABELA!!!):</label>
+            <textarea name="input_text" id="input_text" rows="20" cols="50"></textarea>
+            <br>
+            <input type="submit" value="Przetwórz tekst">
+        </form>
+    </div>
+</body>
+{% include 'footer.html' %}
+</html>

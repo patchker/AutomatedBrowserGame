@@ -1,0 +1,167 @@
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista rekordów</title>
+    <link rel="stylesheet" href="../static/styles.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <style>
+
+
+
+.button-group {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.button-group form {
+    flex-grow: 1;
+    margin-right: 10px;
+}
+
+.button-group form:last-child {
+    margin-right: 0;
+}
+th
+{
+    text-align: center;
+}
+td
+{
+    text-align: center;
+}
+    </style>
+
+</head>
+<body>
+<!-- reszta kodu... -->
+<header>
+    <nav>
+        <a href="/"><h1>patchker inc.</h1></a>
+        <div class="cont">
+        <ul>
+            <a href="/" ><li>HOME</li></a>
+            <a href="/lista" class="current-page"><li>LIST</li></a>
+            <a href="/wyslane"><li>SENT ATTACKS</li></a>
+            <a href="/niewyslane"><li>NOT SENT ATTACKS</li></a>
+        </ul>
+
+        </div>
+    </nav>
+</header>
+<main class="container">
+    <section>
+   <h1>SCHEDULED ATTACKS ({{ rekordy|length }})
+    <span id="delete_all">
+        <form action="{{ url_for('lista_delete_all') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete all?');">
+            <input type="submit" value="DELETE ALL">
+        </form>
+    </span>
+</h1>
+<div class="button-group">
+    <form action="{{ url_for('burzaki_delete_all') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete all burzaki?');">
+        <input type="submit" value="DELETE ALL BURZAKI">
+    </form>
+    <form action="{{ url_for('grubasy_delete_all') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete all grubasy?');">
+        <input type="submit" value="DELETE ALL SZLACHCIE">
+    </form>
+    <form action="{{ url_for('fejkgrubasy_delete_all') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete all fejk grubasy?');">
+        <input type="submit" value="DELETE ALL FEJK SZLACHCIE">
+    </form>
+</div>
+
+<br>
+    <table>
+        <tr>
+            <th>ID</th>
+            <th>Type</th>
+            <th>Attacker's Cords (XXX|YYY)</th>
+            <th>Enemy Cords (XXX|YYY)</th>
+
+            <th>Date</th>
+            <th>Action</th>
+        </tr>
+    {% for rekord in rekordy %}
+        <tr id="row-{{ rekord[0] }}">
+            <!-- reszta wiersza... -->
+                <td>{{ rekord[0] }}</td>
+                <td>{{ rekord[4] }}</td>
+                <td>{{ rekord[1] }}</td>
+                <td>{{ rekord[2] }}</td>
+                <td>{{ rekord[3] }}</td>
+
+            <td>
+                <form class="edit-form" action="{{ url_for('edytuj', id=rekord[0]) }}" method="GET">
+                    <input type="submit" value="Edit">
+                </form>
+
+                <form class="delete-form" data-id="{{ rekord[0] }}" method="POST" style="display:inline;">
+                    <input type="button" value="Delete">
+                </form>
+
+            </td>
+        </tr>
+    {% endfor %}
+ </table>
+        <form action="{{ url_for('save') }}" method="GET">
+    <input type="submit" value="Add new record">
+</form>
+            <form action="{{ url_for('massadding') }}" method="GET">
+    <input type="submit" value="Add multiple records">
+</form>
+
+     </section>
+</main>
+{% include 'footer.html' %}
+
+<script>
+$(document).ready(function(){
+    $(".delete-form").on('click', function(e){
+        e.preventDefault();
+        var id = $(this).data('id');
+        $.ajax({
+            url: '/usun/' + id,
+            type: 'POST',
+            success: function(result) {
+                $('#row-' + id).remove();
+            },
+            error: function(xhr, status, error) {
+                console.error('Error occurred:', error);
+            }
+        });
+    });
+});
+</script>
+<script>
+$(document).ready(function(){
+    // Twoja istniejąca logika...
+    $(".delete-form").on('click', function(e){
+        // ...
+    });
+
+    // Dodaj nową logikę...
+    var rows = $("table tr");
+    for (var i = 1; i < rows.length - 1; i++) {  // Rozpocznij od 1, aby pominąć nagłówki tabeli
+        var date1Cell = $(rows[i]).find("td")[4];  // Znajdź komórkę z datą
+        var date1 = new Date(date1Cell.textContent);
+        var date2Cell = $(rows[i + 1]).find("td")[4];  // Znajdź komórkę z datą w następnym wierszu
+        var date2 = new Date(date2Cell.textContent);
+
+        var diffInMilliseconds = Math.abs(date2 - date1);
+        var diffInMinutes = diffInMilliseconds / 1000 / 60;
+
+        if (diffInMinutes < 1) {
+            $(rows[i]).find('td').css('background-color', '#FF7F7F');
+            $(rows[i + 1]).find('td').css('background-color', '#FF7F7F');
+        }
+    }
+});
+</script>
+
+
+</body>
+</html>

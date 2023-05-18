@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edytuj rekord</title>
+    <link rel="stylesheet" href="../static/styles.css">
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .container {
+            flex: 1;
+        }
+        .form-group {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 1em;
+        }
+        .error {
+            color: red;
+        }
+        footer {
+            padding: 1em;
+            background-color: #f8f8f8;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<!-- reszta kodu -->
+
+<header>
+    <a href="/"><h1>patchker inc.</h1></a>
+    <nav class="cont">
+        <ul>
+            <a href="/"><li>HOME</li></a>
+            <a href="/lista"><li>LIST</li></a>
+            <a href="/wyslane"><li>SENT ATTACKS</li></a>
+            <a href="/niewyslane"><li>NOT SENT ATTACKS</li></a>
+        </ul>
+        </ul>
+    </nav>
+</header>
+<main class="container">
+    <h1>Edit record</h1>
+    <form action="{{ url_for('edytuj', id=rekord[0]) }}" method="post">
+        <div class="form-group">
+            <label for="parametr1">Attacker's coords (XXX|YYY)</label>
+            <input type="text" name="parametr1" id="parametr1" value="{{ rekord[1] }}">
+            <!-- Dodaj miejsce na błędy walidacji -->
+
+        </div>
+        <!-- Powtarzamy dla pozostałych pól... -->
+        <div class="form-group">
+            <label for="parametr2">Enemy coords (XXX|YYY)</label>
+            <input type="text" name="parametr2" id="parametr2" value="{{ rekord[2] }}">
+
+        </div>
+               <!-- Powtarzamy dla pozostałych pól... -->
+        <div class="form-group">
+            <label for="parametr4">Type</label>
+            <select name="parametr4" id="parametr4">
+                <option value="OFF">OFF</option>
+                <option value="FAKE">FAKE</option>
+                <option value="SZLACHCIC">SZLACHCIC</option>
+                <option value="FAKE SZLACHCIC">FAKE SZLACHCIC</option>
+                <option>BURZAK - 25 - Kuźnia</option>
+                <option>BURZAK - 50 - Kuźnia</option>
+                <option>BURZAK - 75 - Kuźnia</option>
+                <option>BURZAK - 100 - Kuźnia</option>
+                <option>BURZAK - 25 - Zagroda</option>
+                <option>BURZAK - 50 - Zagroda</option>
+                <option>BURZAK - 75 - Zagroda</option>
+                <option>BURZAK - 100 - Zagroda</option>
+                <option>BURZAK - 25 - Ratusz</option>
+                <option>BURZAK - 50 - Ratusz</option>
+                <option>BURZAK - 75 - Ratusz</option>
+                <option>BURZAK - 100 - Ratusz</option>
+                <option>BURZAK - 25 - Spichlerz</option>
+                <option>BURZAK - 50 - Spichlerz</option>
+                <option>BURZAK - 75 - Spichlerz</option>
+                <option>BURZAK - 100 - Spichlerz</option>
+                <!-- Dodaj więcej opcji w razie potrzeby -->
+            </select>
+
+        </div>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var selectElement = document.getElementById('parametr4');
+                var currentValue = "{{ rekord[4] }}";
+                selectElement.value = currentValue;
+            });
+        </script>
+
+        <div class="form-group">
+            <label for="parametr3">Date:</label>
+            <input type="datetime-local" name="parametr3" id="parametr3" step="0.001" value="{{ rekord[3] }}">
+
+        </div>
+
+        <input type="submit" value="Save">
+    </form>
+    <form action="{{ url_for('lista') }}">
+        <input type="submit" value="Back to list">
+    </form>
+
+</main>
+<footer>
+    patchker inc.
+</footer>
+</body>
+</html>

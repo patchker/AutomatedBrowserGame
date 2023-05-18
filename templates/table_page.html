@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table Page</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <style>
+        th
+        {
+            text-align:center;
+        }
+        td
+        {
+            text-align:center;
+        }
+
+    </style>
+</head>
+<body>
+    <header>
+    <a href="/"><h1>patchker inc.</h1></a>
+</header>
+<div class="cont">
+<ul>
+            <li><a href="/">HOME</a></li>
+            <li><a href="/lista">LIST</a></li>
+            <li><a href="/wyslane">SENT ATTACKS</a></li>
+            <li><a href="/niewyslane">NOT SENT ATTACKS</a></li>
+</ul>
+</div>
+
+<div class="container">
+    <h1>New data ({{ table_data|length }})</h1>
+    <table>
+        <tr>
+            <th>Type</th>
+            <th>Date</th>
+            <th>From Village</th>
+            <th>Target</th>
+
+        </tr>
+        {% for attack in table_data %}
+        <tr>
+            <td>{{ attack['type'] }}</td>
+            <td>{{ attack['date'] }}</td>
+            <td>{{ attack['from_village'] }}</td>
+            <td>{{ attack['target'] }}</td>
+
+        </tr>
+        {% endfor %}
+    </table>
+    <p>Czy na pewno chcesz dodać te dane do bazy?</p>
+    <form action="/add_to_db" method="POST">
+        <!-- Możesz przekazać dane tabeli jako ukryte pola formularza -->
+        {% for attack in table_data %}
+            <input type="hidden" name="type" value="{{ attack['type'] }}">
+            <input type="hidden" name="date" value="{{ attack['date'] }}">
+            <input type="hidden" name="from_village" value="{{ attack['from_village'] }}">
+            <input type="hidden" name="target" value="{{ attack['target'] }}">
+
+        {% endfor %}
+        <input type="submit" value="Dodaj do bazy">
+    </form>
+</div>
+
+</body>
+<footer>
+    patchker inc.
+</footer>
+</html>

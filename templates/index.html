@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>patchker inc.</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+
+    <style>
+        .home
+        {
+            margin:auto;
+            margin-top:50px;
+
+            text-align: center;
+        }
+        .home input
+        {
+            width:300px;
+            height:100px;
+            border-radius: 7px;
+            font-size: 40px;
+        }
+
+
+.container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-around;
+}
+
+
+
+    </style>
+    <style>
+    .tile {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #f0f0f0;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        width:50%;
+        height:120px;
+    }
+
+    .tile span:first-child {
+        font-size: 20px;
+        color: #333;
+    }
+
+    .tile span:last-child {
+        font-size: 30px;
+        color: #007BFF;
+        font-weight: bold;
+        text-align: center;
+        width:50%;
+    }
+</style>
+
+</head>
+<body>
+<header>
+    <a href="/"><h1>patchker inc.</h1></a>
+
+</header>
+
+<div class="cont">
+<ul>
+    <a href="/" class="current-page"><li>HOME</li></a>
+    <a href="/lista"><li>LIST</li></a>
+    <a href="/wyslane"><li>SENT ATTACKS</li></a>
+    <a href="/niewyslane"><li>NOT SENT ATTACKS</li></a>
+</ul>
+
+</div>
+<div class="container">
+<div class="tile">
+    <span>Ostatni atak: </span>
+    <span id="ostatni-atak"></span>
+
+</div>
+<div class="tile">
+    <span>Ilość wysłanych ataków: </span>
+    <span id="ilosc-wyslanych"></span>
+</div>
+<div class="tile">
+    <span>Ilość niewysłanych ataków: </span>
+    <span id="ilosc-niewyslanych"></span>
+</div>
+<div class="tile">
+    <span>Ilość ataków w kolejce: </span>
+    <span id="ilosc-kolejka"></span>
+</div>
+
+<br>
+<br>
+<form class="home" action="/" method="POST">
+    Odpalanie maszyny:
+    <input id="start-button" type="submit" value="START">
+</form>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+
+<script>
+$(document).ready(function(){
+  $('#start-button').click(function(event){
+    event.preventDefault();  // zatrzymuje domyślne zachowanie przycisku
+    $(this).css('background-color', 'gray');
+    $(this).prop('disabled', true);
+    $(this).val('RUNNING');
+
+    // ręczne wysłanie formularza
+    $(this).closest('form').submit();
+  });
+});
+</script>
+
+
+
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+$(document).ready(function(){
+  function updateData() {
+    $.ajax({
+      url: '/update_data',
+      type: 'get',
+      success: function(data){
+        // aktualizuj dane na stronie
+        const attackTime = new Date();
+const attackParts = data['ostatni_atak'][0][0].split(':');
+let diffStr = "";
+
+if (data['ostatni_atak'] != " - ") {
+    attackTime.setHours(attackParts[0], attackParts[1], attackParts[2]);
+
+    const now = new Date();
+    const diffMs = now - attackTime; // różnica w milisekundach
+    const diffSecs = Math.round(diffMs / 1000); // różnica w sekundach
+    const diffMins = Math.round(diffSecs / 60); // różnica w minutach
+    const diffHours = Math.round(diffMins / 60); // różnica w godzinach
+
+    diffStr = `${diffSecs} sekund temu`;
+    if (diffMins > 1) {
+        diffStr = `${diffMins} minut temu`;
+    }
+    if (diffHours > 1) {
+        diffStr = `${diffHours} godzin temu`;
+    }
+}
+
+$('#ostatni-atak').html(`${data['ostatni_atak']} <br>(${diffStr})`);
+        $('#ilosc-niewyslanych').text(data['ilosc_niewyslanych']);
+        $('#ilosc-wyslanych').text(data['ilosc_wyslanych']);
+        $('#ilosc-kolejka').text(data['ilosc_kolejka']);
+      }
+    });
+  }
+
+  updateData();  // wywołaj funkcję od razu po załadowaniu strony
+
+  setInterval(updateData, 10000);  // odświeżaj co 10 sekund
+});
+
+</script>
+
+
+</body>
+{% include 'footer.html' %}
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>patchker inc.</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .container {
+            flex: 1;
+        }
+        .form-group {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 1em;
+        }
+        .error {
+            color: red;
+        }
+        footer {
+            padding: 1em;
+            background-color: #f8f8f8;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+<header>
+    <a href="/"><h1>patchker inc.</h1></a>
+    <nav class="cont">
+        <ul>
+            <a href="/"><li>HOME</li>            </a>
+            <a href="/lista"><li>LIST</li></a>
+            <a href="/wyslane"><li>SENT ATTACKS</li></a>
+            <a href="/niewyslane"><li>NOT SENT ATTACKS</li></a>
+        </ul>
+    </nav>
+</header>
+<main class="container">
+    <h1>NEW ATTACK</h1>
+    <form action="/zapisz" method="POST">
+        <div class="form-group">
+            <label for="parametr1">Attacker's coords (XXX|YYY)</label>
+            <input type="text" name="parametr1" id="parametr1">
+        </div>
+        <div class="form-group">
+            <label for="parametr2">Enemy coords (XXX|YYY)</label>
+            <input type="text" name="parametr2" id="parametr2">
+        </div>
+        <div class="form-group">
+            <label for="parametr4">Type</label>
+            <select name="parametr4" id="parametr4">
+                <option value="OFF">OFF</option>
+                <option value="FAKE">FAKE</option>
+                <option value="SZLACHCIC">SZLACHCIC</option>
+                <option value="FAKE SZLACHCIC">FAKE SZLACHCIC</option>
+                <option>BURZAK - 25 - Kuźnia</option>
+                <option>BURZAK - 50 - Kuźnia</option>
+                <option>BURZAK - 75 - Kuźnia</option>
+                <option>BURZAK - 100 - Kuźnia</option>
+                <option>BURZAK - 25 - Zagroda</option>
+                <option>BURZAK - 50 - Zagroda</option>
+                <option>BURZAK - 75 - Zagroda</option>
+                <option>BURZAK - 100 - Zagroda</option>
+                <option>BURZAK - 25 - Ratusz</option>
+                <option>BURZAK - 50 - Ratusz</option>
+                <option>BURZAK - 75 - Ratusz</option>
+                <option>BURZAK - 100 - Ratusz</option>
+                <option>BURZAK - 25 - Spichlerz</option>
+                <option>BURZAK - 50 - Spichlerz</option>
+                <option>BURZAK - 75 - Spichlerz</option>
+                <option>BURZAK - 100 - Spichlerz</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="parametr3">Date:</label>
+            <input type="datetime-local" name="parametr3" id="parametr3" step="0.001" value="2023-05-15T12:34:56.789">
+        </div>
+        <input type="submit" value="Save">
+    </form>
+</main>
+{% include 'footer.html' %}
+</body>
+</html>
+

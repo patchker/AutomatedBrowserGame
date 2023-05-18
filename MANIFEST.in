@@ -1,0 +1,4 @@
+include your_script2.py
+recursive-include templates *
+recursive-include static *
+include windscribe.crx

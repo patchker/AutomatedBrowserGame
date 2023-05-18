@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SENT ATTACKS</title>
+    <link rel="stylesheet" href="../static/styles.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+
+</head>
+<body>
+<header>
+    <a href="/"><h1>patchker inc.</h1></a>
+</header>
+<div class="cont">
+<ul>
+    <a href="/"><li>HOME</li></a>
+    <a href="/lista"><li>LIST</li></a>
+    <a href="/wyslane" class="current-page"><li>SENT ATTACKS</li></a>
+    <a href="/niewyslane"><li>NOT SENT ATTACKS</li></a>
+
+
+</ul>
+</div>
+    <div class="container">
+       <h1>SENT ATTACKS
+    <span id="delete_all">
+        <form action="{{ url_for('wyslane_delete_all') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete all?');">
+            <input type="submit" value="DELETE ALL">
+        </form>
+    </span>
+</h1>
+        <table>
+        <tr>
+            <th>ID</th>
+            <th>Type</th>
+            <th>Attacker's Cords (XXX|YYY)</th>
+            <th>Enemy Cords (XXX|YYY)</th>
+
+            <th>Date</th>
+            <th>Action</th>
+        </tr>
+        {% for rekord in rekordy %}
+            <tr id="row-{{ rekord[0] }}">
+                <td>{{ rekord[0] }}</td>
+                <td>{{ rekord[4] }}</td>
+                <td>{{ rekord[1] }}</td>
+                <td>{{ rekord[2] }}</td>
+                <td>{{ rekord[3] }}</td>
+
+                <td>
+
+
+                    <form class="delete-form" data-id="{{ rekord[0] }}" method="POST" style="display:inline;">
+    <input type="button" value="Delete">
+</form>
+
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+<script>
+$(document).ready(function(){
+    $(".delete-form").on('click', function(e){
+        e.preventDefault();
+        var id = $(this).data('id');
+        $.ajax({
+            url: '/usun_wyslane/' + id,
+            type: 'POST',
+            success: function(result) {
+                $('#row-' + id).remove();
+            },
+            error: function(xhr, status, error) {
+                console.error('Error occurred:', error);
+            }
+        });
+    });
+});
+</script>
+
+    </div>
+</body>
+{% include 'footer.html' %}
+</html>
