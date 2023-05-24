@@ -33,7 +33,7 @@ def init_db():
     conn = sqlite3.connect('data.db')
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS data
-(id INTEGER PRIMARY KEY AUTOINCREMENT, parametr1 TEXT, parametr2 TEXT, parametr3 TEXT, parametr4 TEXT)''')
+(id INTEGER PRIMARY KEY AUTOINCREMENT, parametr1 TEXT, parametr2 TEXT, parametr3 TEXT, parametr4 TEXT, parametr5 TEXT, parametr6 TEXT )''')
     # Dodaj na początku kodu, np. po otwarciu połączenia z bazą danych
     c.execute('''
         CREATE TABLE IF NOT EXISTS wyslane (
@@ -52,7 +52,9 @@ def init_db():
             parametr2 TEXT,
             data TEXT,
             attacktype TEXT,
-            reason TEXT
+            reason TEXT,
+            url TEXT,
+            massorsingle TEXT
         )
     ''')
 
@@ -253,14 +255,20 @@ def restore(id):
     # Pobieranie rekordu z tabeli 'data' na podstawie id
     c.execute("SELECT * FROM niewyslane WHERE id=?", (id,))
     record = c.fetchone()
-    record = record[1:-1]
+    print("Record1",record)
+    record = record[1:]
+    #record = record[:-2] + record[-1:]
+    record = record[:4] + record[5:]
+
+    print("Record2",record)
 
     if record:
         # Wstawianie rekordu do tabeli 'wyslane'
         c.execute('''
-            INSERT INTO data (parametr1, parametr2, parametr3, parametr4)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO data (parametr1, parametr2, parametr3, parametr4, parametr5, parametr6)
+            VALUES (?, ?, ?, ?, ?, ?)
         ''', record)
+        print("Record:",record)
 
         # Usuwanie rekordu z tabeli 'data'
         c.execute("DELETE FROM niewyslane WHERE id=?", (id,))
@@ -320,6 +328,8 @@ def zapisz():
     parametr2 = request.form.get('parametr2')
     parametr3 = request.form.get('parametr3')
     parametr4 = request.form.get('parametr4')
+    parametr5 = request.form.get('parametr5')
+
 
     # Sprawdzenie i poprawienie wartości parametr3
     try:
@@ -344,8 +354,8 @@ def zapisz():
 
     conn = sqlite3.connect("data.db")
     c = conn.cursor()
-    c.execute("INSERT INTO data (parametr1, parametr2, parametr3, parametr4) VALUES (?, ?, ?,?)",
-              (parametr1, parametr2, parametr3, parametr4))
+    c.execute("INSERT INTO data (parametr1, parametr2, parametr3, parametr4, parametr5, parametr6) VALUES (?, ?, ?,?,?,?)",
+              (parametr1, parametr2, parametr3, parametr4, parametr5, "0"))
     conn.commit()
     conn.close()
 
@@ -370,12 +380,19 @@ def process_text():
 
     attacks = []
 
+
     # iteracja przez każdą linię
     for line in lines:
         if line:
             # tworzymy słownik do przechowywania informacji o ataku
             attack = {}
 
+
+            # dodajemy url do słownika
+            url = re.search(r'\[url=(.*?)\]', line)
+            if url:
+                attack['url'] = url.group(1)
+                print(attack['url'])
             attack_type_and_column = re.search(r'\[\|\].*?\[\|\](.*?)\[\|\](.*?)\[\|\]', line)
             if attack_type_and_column:
                 attack_type = attack_type_and_column.group(1)
@@ -432,6 +449,8 @@ def add_to_db():
     dates = request.form.getlist('date')
     from_villages = request.form.getlist('from_village')
     targets = request.form.getlist('target')
+    urls = request.form.getlist('url')  # dodajemy odczytywanie url
+    print(urls)
 
     conn = sqlite3.connect("data.db")
     c = conn.cursor()
@@ -440,12 +459,11 @@ def add_to_db():
     attack_times = []
 
     for i in range(len(types)):
-        print(i)
         type = types[i]
         date = dates[i]
-        print("Date: ",date)
         from_village = from_villages[i]
         target = targets[i]
+        url = urls[i]  # przypisujemy url
 
         date_str, start_time_str, end_time_str = date.split(' ')
 
@@ -456,31 +474,27 @@ def add_to_db():
         if end_time < start_time:
             end_time += timedelta(days=1)
 
-        print("Start time:",start_time)
-        print("End time: ",end_time)
         time_range = end_time - start_time
         if time_range.total_seconds() > 0:
-            # Losowanie czasu ataku, który nie jest zbyt bliski wcześniej wylosowanym czasom
-
 
             while True:
                 random_seconds = random.randrange(int(time_range.total_seconds()))
                 random_time = start_time + timedelta(seconds=random_seconds)
-                # Sprawdzanie, czy wylosowany czas ataku nie jest zbyt bliski żadnemu z wcześniej wylosowanych czasów
+
                 if all(abs((random_time - old_time).total_seconds()) >= 60 for old_time in attack_times):
-                    break  # Jeśli wylosowany czas ataku jest odpowiednio oddalony, przerywamy pętlę
-            attack_times.append(random_time)  # Dodajemy wylosowany czas ataku do listy
+                    break
+            attack_times.append(random_time)
 
             attack_time = random_time.strftime('%Y-%m-%dT%H:%M:%S.%f')
             attack_time = attack_time[:-3]
-            print(attack_time)
 
-            c.execute("INSERT INTO data (parametr4, parametr3, parametr1, parametr2) VALUES (?, ?, ?, ?)",
-                      (type, attack_time, from_village, target))
+            c.execute("INSERT INTO data (parametr4, parametr3, parametr1, parametr2, parametr5,parametr6) VALUES (?, ?, ?, ?, ?,?)",
+                      (type, attack_time, from_village, target, url,"1"))  # dodajemy url do zapytania SQL
     conn.commit()
     conn.close()
 
     return redirect(url_for('lista'))
+
 
 
 def uruchom_moj_skrypt():
@@ -498,7 +512,10 @@ def scripto():
             parametr1 = row[1]
             parametr2 = row[2]
             attacktype = row[4]
+            url=row[5]
+            massorsingle=row[6]
 
+            print(row[0],row[1],row[2],row[4],row[5],row[6])
 
             data = date_str
             dt = datetime.strptime(data, '%Y-%m-%dT%H:%M:%S.%f')
@@ -537,88 +554,116 @@ def scripto():
                 minuta2 = str(minuta)
 
             time.sleep(1)
-            driver.get("https://plemiona.pl")
+            if massorsingle == "1":
+
+                driver.get(url)
+
+                try:
+                    challenge_container = driver.find_element(By.XPATH, "//span[text()='Świat 182']")
+                    challenge_container.click()
+                    time.sleep(1)
+                    driver.get(url)
+
+                except:
+                    return False, "E.04 - Nie znaleziono swiata 182"
+
+
+                try:
+                    challenge_container = driver.find_element(By.CLASS_NAME, "challenge-container")
+                    return False, "E.01 - Znaleziono captcha"
+                except:
+                    pass
+
+                try:
+                    iframe = driver.find_element(By.XPATH, "//iframe[@title='Main content of the hCaptcha challenge']")
+                    return False, "E.02 - Znaleziono captcha"
+                except Exception as e:
+                    pass
+
+
+            else:
+                time.sleep(1)
+                driver.get("https://plemiona.pl")
+
+                time.sleep(1)
+
+                try:
+                    challenge_container = driver.find_element(By.CLASS_NAME, "challenge-container")
+                    return False, "E.01 - Znaleziono captcha"
+                except:
+                    pass
+
+                try:
+                    iframe = driver.find_element(By.XPATH, "//iframe[@title='Main content of the hCaptcha challenge']")
+                    return False, "E.02 - Znaleziono captcha"
+                except Exception as e:
+                    pass
+
+                time.sleep(1)
+                try:
+                    logout_link = driver.find_element(By.XPATH, "//a[@href='/page/logout']")
+                except:
+                    return False, "E.03 - Wylogowano ze strony"
+
+                try:
+                    challenge_container = driver.find_element(By.XPATH, "//span[text()='Świat 182']")
+                    challenge_container.click()
+                except:
+                    return False, "E.04 - Nie znaleziono swiata 182"
+
+                try:
+                    challenge_container = driver.find_element(By.CLASS_NAME, "popup_box_close")
+                    challenge_container.click()
+                except:
+                    pass
+
+                try:
+                    element = driver.find_element(By.XPATH, '//a[contains(text(), "Kombinowany ")]')
+                    element.click()
+                    time.sleep(1)
+                except:
+                    pass
+
+                try:
+                    element = driver.find_element(By.CLASS_NAME, "group-menu-item")
+                    element.click()
+                    time.sleep(1)
+                except:
+                    pass
+
+                current_url = driver.current_url
+
+                response = requests.get(current_url)
+
+                if response.status_code == 200:
+                    html_content = response.text
+
+                # Pobierz kod źródłowy strony
+                html_content = driver.page_source
+
+                # Przetwarzanie kodu HTML za pomocą BeautifulSoup
+                soup = BeautifulSoup(html_content, "html.parser")
+                try:
+
+                    villages = soup.find_all("tr", class_="nowrap")
+                    for village in villages:
+                        # Pobieranie identyfikatora wioski
+                        village_id = village.find("span", class_="quickedit-vn")["data-id"]
+
+                        # Pobieranie koordynatów wioski
+                        village_coordinates_raw = village.find("span", class_="quickedit-label").text
+                        village_coordinates = village_coordinates_raw.split('(')[1].split(')')[0]
+
+                        if village_coordinates == parametr1:
+                            driver.get("https://pl182.plemiona.pl/game.php?village=" + village_id + "&screen=place")
+                            break
+                    else:
+                        return False, "E.07 - Nie znaleziono wioski atakującego o podanych koordynatach"
+                except:
+                    return False, "E.07 - Błąd pobierania id wiosek"
+
 
             time.sleep(1)
-
-            try:
-                challenge_container = driver.find_element(By.CLASS_NAME, "challenge-container")
-                return False, "E.01 - Znaleziono captcha"
-            except:
-                pass
-
-            try:
-                iframe = driver.find_element(By.XPATH, "//iframe[@title='Main content of the hCaptcha challenge']")
-                return False, "E.02 - Znaleziono captcha"
-            except Exception as e:
-                pass
-
-            time.sleep(1)
-            try:
-                logout_link = driver.find_element(By.XPATH, "//a[@href='/page/logout']")
-            except:
-                return False, "E.03 - Wylogowano ze strony"
-
-            try:
-                challenge_container = driver.find_element(By.XPATH, "//span[text()='Świat 182']")
-                challenge_container.click()
-            except:
-                return False, "E.04 - Nie znaleziono swiata 182"
-
-            time.sleep(2)
-            try:
-                challenge_container = driver.find_element(By.CLASS_NAME, "popup_box_close")
-                challenge_container.click()
-            except:
-                pass
-
-            time.sleep(2)
-            try:
-                element = driver.find_element(By.XPATH, '//a[contains(text(), "Kombinowany ")]')
-                element.click()
-                time.sleep(1)
-            except:
-                return False, "E.06 - Nie znalezniono przeglądu"
-
-            try:
-                element = driver.find_element(By.CLASS_NAME,"group-menu-item")
-                element.click()
-                time.sleep(1)
-            except:
-                pass
-
-            current_url = driver.current_url
-
-            response = requests.get(current_url)
-
-            if response.status_code == 200:
-                html_content = response.text
-
-            # Pobierz kod źródłowy strony
-            html_content = driver.page_source
-
-            # Przetwarzanie kodu HTML za pomocą BeautifulSoup
-            soup = BeautifulSoup(html_content, "html.parser")
-            try:
-
-                villages = soup.find_all("tr", class_="nowrap")
-                for village in villages:
-                    # Pobieranie identyfikatora wioski
-                    village_id = village.find("span", class_="quickedit-vn")["data-id"]
-
-                    # Pobieranie koordynatów wioski
-                    village_coordinates_raw = village.find("span", class_="quickedit-label").text
-                    village_coordinates = village_coordinates_raw.split('(')[1].split(')')[0]
-
-                    if village_coordinates == parametr1:
-                        driver.get("https://pl182.plemiona.pl/game.php?village=" + village_id + "&screen=place")
-                        break
-                else:
-                    return False, "E.07 - Nie znaleziono wioski atakującego o podanych koordynatach"
-            except:
-                return False, "E.07 - Błąd pobierania id wiosek"
-
-            time.sleep(2)
 
             if attacktype == "OFF":
                 try:
@@ -771,6 +816,14 @@ def scripto():
                     time.sleep(delay)
 
             try:
+                if massorsingle == "1" and attacktype == "FAKE":
+                    try:
+                        challenge_container = driver.find_element(By.CLASS_NAME, "village-delete")
+                        challenge_container.click()
+                        time.sleep(1)
+                    except:
+                        return False, "E.15 - Blad przy usuwaniu obrazka jebanego"
+
                 challenge_container = driver.find_element(By.CLASS_NAME, "target-input-field")
                 challenge_container.clear()
                 time.sleep(2)
@@ -871,6 +924,8 @@ def scripto():
             parametr1 = row[1]
             parametr2 = row[2]
             attacktype = row[4]
+            url = row[5]
+            massorsingle = row[6]
 
             data = date_str
             dt = datetime.strptime(data, '%Y-%m-%dT%H:%M:%S.%f')
@@ -914,8 +969,9 @@ def scripto():
                     conn = sqlite3.connect('data.db')
                     c = conn.cursor()
                     c.execute(
-                        "INSERT INTO niewyslane(parametr1, parametr2, data, attacktype, reason) VALUES (?, ?, ?, ?, ?)",
-                        (parametr1, parametr2, data, attacktype, message))
+                        "INSERT INTO niewyslane(parametr1, parametr2, data, attacktype, reason, url, massorsingle) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                        (parametr1, parametr2, data, attacktype, message, url, massorsingle))
+                    print("URL:",url)
                     c.execute("DELETE FROM data WHERE id = ?", (id_record,))
                     conn.commit()
 

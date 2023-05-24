@@ -4,69 +4,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Table Page</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-    <style>
-        th
-        {
-            text-align:center;
-        }
-        td
-        {
-            text-align:center;
-        }
-
-    </style>
 </head>
-<body>
-    <header>
-    <a href="/"><h1>patchker inc.</h1></a>
+<body class="bg-neutral-900 text-white flex flex-col min-h-full font-sanfrancisco">
+<header class="px-10 py-2 flex items-center justify-between bg-neutral-800">
+    <nav>
+        <ul class="flex space-x-4">
+            <div class="flex items-center">
+                <a href="/"><h1 class="text-3xl font-bold text-blue-500 font-custom px-5">patchker inc.</h1></a>
+            </div>
+            <a href="/" class="text-blue-400 hover:text-blue-300 py-3"><li>HOME</li></a>
+            <a href="/lista" class="text-blue-400 hover:text-blue-300 py-3"><li>LIST</li></a>
+            <a href="/wyslane" class="text-blue-400 hover:text-blue-300 py-3"><li>SENT ATTACKS</li></a>
+            <a href="/niewyslane" class="text-blue-400 hover:text-blue-300 py-3"><li>NOT SENT ATTACKS</li></a>
+        </ul>
+    </nav>
 </header>
-<div class="cont">
-<ul>
-            <li><a href="/">HOME</a></li>
-            <li><a href="/lista">LIST</a></li>
-            <li><a href="/wyslane">SENT ATTACKS</a></li>
-            <li><a href="/niewyslane">NOT SENT ATTACKS</a></li>
-</ul>
-</div>
-
-<div class="container">
-    <h1>New data ({{ table_data|length }})</h1>
-    <table>
-        <tr>
-            <th>Type</th>
-            <th>Date</th>
-            <th>From Village</th>
-            <th>Target</th>
-
-        </tr>
-        {% for attack in table_data %}
-        <tr>
-            <td>{{ attack['type'] }}</td>
-            <td>{{ attack['date'] }}</td>
-            <td>{{ attack['from_village'] }}</td>
-            <td>{{ attack['target'] }}</td>
-
-        </tr>
-        {% endfor %}
-    </table>
-    <p>Czy na pewno chcesz dodać te dane do bazy?</p>
-    <form action="/add_to_db" method="POST">
-        <!-- Możesz przekazać dane tabeli jako ukryte pola formularza -->
-        {% for attack in table_data %}
-            <input type="hidden" name="type" value="{{ attack['type'] }}">
-            <input type="hidden" name="date" value="{{ attack['date'] }}">
-            <input type="hidden" name="from_village" value="{{ attack['from_village'] }}">
-            <input type="hidden" name="target" value="{{ attack['target'] }}">
-
-        {% endfor %}
-        <input type="submit" value="Dodaj do bazy">
-    </form>
-</div>
-
-</body>
-<footer>
+<main class="mx-auto w-full flex-grow flex justify-center px-5 mb-20">
+    <section>
+        <h1 class="text-blue-400 text-3xl py-4">New data ({{ table_data|length }})</h1>
+        <table class="w-full text-center mb-4 border-collapse border border-gray-600 rounded-lg overflow-hidden">
+            <thead class="bg-blue-500 text-white border-0">
+                <th class="border-0 py-2 px-10">Type</th>
+                <th class="border-0 py-2 px-10">Url</th>
+                <th class="border-0 py-2 px-10">Date</th>
+                <th class="border-0 py-2 px-10">From Village</th>
+                <th class="border-0 py-2 px-10">Target</th>
+                <th class="border-0 py-2 px-10">massorsingle</th>
+            </thead>
+            {% for attack in table_data %}
+            <tr class="text-white hover:bg-gray-700 transition-colors duration-200">
+                <td class="border border-gray-600 py-2  px-10">{{ attack['type'] }}</td>
+                <td class="border border-gray-600 py-2  px-10">{{ attack['url'] }}</td>
+                <td class="border border-gray-600 py-2  px-10">{{ attack['date'] }}</td>
+                <td class="border border-gray-600 py-2  px-10">{{ attack['from_village'] }}</td>
+                <td class="border border-gray-600 py-2  px-10">{{ attack['target'] }}</td>
+                <td class="border border-gray-600 py-2  px-10">{{ attack['massorsingle'] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        <p class="text-blue-400 text-lg py-2">Czy na pewno chcesz dodać te dane do bazy?</p>
+        <form action="/add_to_db" method="POST">
+            <!-- Możesz przekazać dane tabeli jako ukryte pola formularza -->
+            {% for attack in table_data %}
+                <input type="hidden" name="type" value="{{ attack['type'] }}">
+                <input type="hidden" name="url" value="{{ attack['url'] }}">
+                <input type="hidden" name="date" value="{{ attack['date'] }}">
+                <input type="hidden" name="from_village" value="{{ attack['from_village'] }}">
+                <input type="hidden" name="target" value="{{ attack['target'] }}">
+                <input type="hidden" name="massorsingle" value="{{ attack['massorsingle'] }}">
+            {% endfor %}
+            <input type="submit" value="Dodaj do bazy" class="px-5 py-2 bg-blue-500 hover:bg-blue-400 text-white font-bold rounded-lg shadow-lg">
+        </form>
+    </section>
+</main>
+<footer class="w-full fixed bottom-0 bg-neutral-800 text-white py-5 px-10 text-center mt-20">
     patchker inc.
 </footer>
+</body>
 </html>

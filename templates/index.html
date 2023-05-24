@@ -1,175 +1,61 @@
 <!DOCTYPE html>
-<html lang="pl">
+<html lang="pl" class="h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>patchker inc.</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <link href="../static/css/output.css" rel="stylesheet">
     <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-
-    <style>
-        .home
-        {
-            margin:auto;
-            margin-top:50px;
-
-            text-align: center;
-        }
-        .home input
-        {
-            width:300px;
-            height:100px;
-            border-radius: 7px;
-            font-size: 40px;
-        }
-
-
-.container {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-around;
-}
-
-
-
-    </style>
-    <style>
-    .tile {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        background-color: #f0f0f0;
-        border-radius: 8px;
-        padding: 20px;
-        margin-bottom: 10px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        width:50%;
-        height:120px;
-    }
-
-    .tile span:first-child {
-        font-size: 20px;
-        color: #333;
-    }
-
-    .tile span:last-child {
-        font-size: 30px;
-        color: #007BFF;
-        font-weight: bold;
-        text-align: center;
-        width:50%;
-    }
-</style>
-
 </head>
-<body>
-<header>
-    <a href="/"><h1>patchker inc.</h1></a>
+<body class="bg-neutral-900 text-white flex flex-col min-h-full font-sanfrancisco">
+<header class="px-10 py-2 flex items-center justify-between bg-neutral-800">
+    <nav>
+        <ul class="flex space-x-4">
 
+            <div class="flex items-center">
+            <a href="/"><h1 class="text-3xl font-bold text-blue-500 font-custom px-5">patchker inc.</h1></a>
+                </div>
+            <a href="/" class="text-blue-400 hover:text-blue-300 py-3"><li>HOME</li></a>
+            <a href="/lista" class="py-3"><li>LIST</li></a>
+            <a href="/wyslane" class="py-3"><li>SENT ATTACKS</li></a>
+            <a href="/niewyslane" class="py-3"><li>NOT SENT ATTACKS</li></a>
+        </ul>
+    </nav>
 </header>
 
-<div class="cont">
-<ul>
-    <a href="/" class="current-page"><li>HOME</li></a>
-    <a href="/lista"><li>LIST</li></a>
-    <a href="/wyslane"><li>SENT ATTACKS</li></a>
-    <a href="/niewyslane"><li>NOT SENT ATTACKS</li></a>
-</ul>
 
-</div>
-<div class="container">
-<div class="tile">
-    <span>Ostatni atak: </span>
-    <span id="ostatni-atak"></span>
+<main class="container mx-auto py-10 flex-grow font-sf pt-20">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+        <div class="tile bg-gray-800 shadow rounded-lg p-5">
+            <span class="text-gray-500">Ostatni atak: </span>
+            <span id="ostatni-atak" class="text-blue-500 text-xl font-bold"></span>
+        </div>
+        <div class="tile bg-gray-800 shadow rounded-lg p-5">
+            <span class="text-gray-500">Ilość wysłanych ataków: </span>
+            <span id="ilosc-wyslanych" class="text-blue-500 text-xl font-bold"></span>
+        </div>
+        <div class="tile bg-gray-800 shadow rounded-lg p-5">
+            <span class="text-gray-500">Ilość niewysłanych ataków: </span>
+            <span id="ilosc-niewyslanych" class="text-blue-500 text-xl font-bold"></span>
+        </div>
+        <div class="tile bg-gray-800 shadow rounded-lg p-5">
+            <span class="text-gray-500">Ilość ataków w kolejce: </span>
+            <span id="ilosc-kolejka" class="text-blue-500 text-xl font-bold"></span>
+        </div>
+    </div>
 
-</div>
-<div class="tile">
-    <span>Ilość wysłanych ataków: </span>
-    <span id="ilosc-wyslanych"></span>
-</div>
-<div class="tile">
-    <span>Ilość niewysłanych ataków: </span>
-    <span id="ilosc-niewyslanych"></span>
-</div>
-<div class="tile">
-    <span>Ilość ataków w kolejce: </span>
-    <span id="ilosc-kolejka"></span>
-</div>
+    <form class="home mt-10 text-center" action="/" method="POST">
+        <label class="text-gray-500 text-xl mb-2 block">Odpalanie maszyny:</label>
+        <input id="start-button" type="submit" value="START" class="w-64 h-16 bg-blue-500 hover:bg-blue-400 text-white rounded text-2xl cursor-pointer transition-colors duration-300">
+    </form>
 
-<br>
-<br>
-<form class="home" action="/" method="POST">
-    Odpalanie maszyny:
-    <input id="start-button" type="submit" value="START">
-</form>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <!-- skrypty... -->
+</main>
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-
-<script>
-$(document).ready(function(){
-  $('#start-button').click(function(event){
-    event.preventDefault();  // zatrzymuje domyślne zachowanie przycisku
-    $(this).css('background-color', 'gray');
-    $(this).prop('disabled', true);
-    $(this).val('RUNNING');
-
-    // ręczne wysłanie formularza
-    $(this).closest('form').submit();
-  });
-});
-</script>
-
-
-
-</div>
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script>
-$(document).ready(function(){
-  function updateData() {
-    $.ajax({
-      url: '/update_data',
-      type: 'get',
-      success: function(data){
-        // aktualizuj dane na stronie
-        const attackTime = new Date();
-const attackParts = data['ostatni_atak'][0][0].split(':');
-let diffStr = "";
-
-if (data['ostatni_atak'] != " - ") {
-    attackTime.setHours(attackParts[0], attackParts[1], attackParts[2]);
-
-    const now = new Date();
-    const diffMs = now - attackTime; // różnica w milisekundach
-    const diffSecs = Math.round(diffMs / 1000); // różnica w sekundach
-    const diffMins = Math.round(diffSecs / 60); // różnica w minutach
-    const diffHours = Math.round(diffMins / 60); // różnica w godzinach
-
-    diffStr = `${diffSecs} sekund temu`;
-    if (diffMins > 1) {
-        diffStr = `${diffMins} minut temu`;
-    }
-    if (diffHours > 1) {
-        diffStr = `${diffHours} godzin temu`;
-    }
-}
-
-$('#ostatni-atak').html(`${data['ostatni_atak']} <br>(${diffStr})`);
-        $('#ilosc-niewyslanych').text(data['ilosc_niewyslanych']);
-        $('#ilosc-wyslanych').text(data['ilosc_wyslanych']);
-        $('#ilosc-kolejka').text(data['ilosc_kolejka']);
-      }
-    });
-  }
-
-  updateData();  // wywołaj funkcję od razu po załadowaniu strony
-
-  setInterval(updateData, 10000);  // odświeżaj co 10 sekund
-});
-
-</script>
-
+<footer class="bg-neutral-800 text-white py-5 px-10 text-center">
+{% include 'footer.html' %}
+</footer>
 
 </body>
-{% include 'footer.html' %}
 </html>
