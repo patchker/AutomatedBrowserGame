@@ -1,34 +1,11 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Edytuj rekord</title>
-    <link rel="stylesheet" href="../static/css/output.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-</head>
-<body class="bg-neutral-900 text-white flex flex-col min-h-full font-sanfrancisco">
-<header class="px-10 py-2 flex items-center justify-between bg-neutral-800">
-    <nav>
-        <ul class="flex space-x-4">
-            <div class="flex items-center">
-                <a href="/"><h1 class="text-3xl font-bold text-blue-500 font-custom px-5">patchker inc.</h1></a>
-            </div>
-            <a href="/" class=" hover:text-blue-300 py-3"><li>HOME</li></a>
-            <a href="/lista" class="text-blue-400 hover:text-blue-300 py-3"><li>LIST</li></a>
-            <a href="/wyslane" class=" hover:text-blue-300 py-3"><li>SENT ATTACKS</li></a>
-            <a href="/niewyslane" class=" hover:text-blue-300 py-3"><li>NOT SENT ATTACKS</li></a>
-        </ul>
-    </nav>
-</header>
-<main class="mx-auto w-full flex-grow flex justify-center px-5">
+{% include 'top.html' %}
+
     <section>
         <h1 class="text-blue-400 text-3xl py-4">Edit record</h1>
         <form action="{{ url_for('edytuj', id=rekord[0]) }}" method="POST">
             <div class="flex flex-col mb-4">
                 <label for="parametr1" class="mb-2">Attacker's coords (XXX|YYY)</label>
-                <input type="text" name="parametr1" id="parametr1" value="{{ rekord[1] }}" class="px-2 py-1 border rounded bg-neutral-600 text-white">
+                <input type="text" name="parametr1" id="parametr1" value="{{ rekord[1] }}" class="px-2 py-1 border rounded bg-neutral-600 text-white w-96">
             </div>
             <div class="flex flex-col mb-4">
                 <label for="parametr2" class="mb-2">Enemy coords (XXX|YYY)</label>
@@ -37,30 +14,36 @@
             <div class="flex flex-col mb-4">
                 <label for="parametr4" class="mb-2">Type</label>
                 <select name="parametr4" id="parametr4" class="px-2 py-1 border rounded bg-neutral-600 text-white">
-                    <!-- Tu będą opcje -->
-
                 <option value="OFF">OFF</option>
                 <option value="FAKE">FAKE</option>
                 <option value="SZLACHCIC">SZLACHCIC</option>
                 <option value="FAKE SZLACHCIC">FAKE SZLACHCIC</option>
-                <option value="BURZAK - 25 - Kuźnia">BURZAK - 25 - Kuźnia</option>
-                <option value="BURZAK - 50 - Kuźnia">BURZAK - 50 - Kuźnia</option>
-                <option value="BURZAK - 75 - Kuźnia">BURZAK - 75 - Kuźnia</option>
-                <option value="BURZAK - 100 - Kuźnia">BURZAK - 100 - Kuźnia</option>
-                <option value="BURZAK - 25 - Zagroda">BURZAK - 25 - Zagroda</option>
-                <option value="BURZAK - 50 - Zagroda">BURZAK - 50 - Zagroda</option>
-                <option value="BURZAK - 75 - Zagroda">BURZAK - 75 - Zagroda</option>
-                <option value="BURZAK - 100 - Zagroda">BURZAK - 100 - Zagroda</option>
-                <option value="BURZAK - 25 - Ratusz">BURZAK - 25 - Ratusz</option>
-                <option value="BURZAK - 50 - Ratusz">BURZAK - 50 - Ratusz</option>
-                <option value="BURZAK - 75 - Ratusz">BURZAK - 75 - Ratusz</option>
-                <option value="BURZAK - 100 - Ratusz">BURZAK - 100 - Ratusz</option>
-                <option value="BURZAK - 25 - Spichlerz">BURZAK - 25 - Spichlerz</option>
-                <option value="BURZAK - 50 - Spichlerz">BURZAK - 50 - Spichlerz</option>
-                <option value="BURZAK - 75 - Spichlerz">BURZAK - 75 - Spichlerz</option>
-                <option value="BURZAK - 100 - Spichlerz">BURZAK - 100 - Spichlerz</option>
+                <option value="BURZAK - 25 -  Kuźnia">BURZAK - 25 - Kuźnia</option>
+                <option value="BURZAK - 50 -  Kuźnia">BURZAK - 50 - Kuźnia</option>
+                <option value="BURZAK - 75 -  Kuźnia">BURZAK - 75 - Kuźnia</option>
+                <option value="BURZAK - 100 -  Kuźnia">BURZAK - 100 - Kuźnia</option>
+                <option value="BURZAK - 25 -  Zagroda">BURZAK - 25 - Zagroda</option>
+                <option value="BURZAK - 50 -  Zagroda">BURZAK - 50 - Zagroda</option>
+                <option value="BURZAK - 75 -  Zagroda">BURZAK - 75 - Zagroda</option>
+                <option value="BURZAK - 100 -  Zagroda">BURZAK - 100 - Zagroda</option>
+                <option value="BURZAK - 25 -  Ratusz">BURZAK - 25 - Ratusz</option>
+                <option value="BURZAK - 50 -  Ratusz">BURZAK - 50 - Ratusz</option>
+                <option value="BURZAK - 75 -  Ratusz">BURZAK - 75 - Ratusz</option>
+                <option value="BURZAK - 100 -  Ratusz">BURZAK - 100 - Ratusz</option>
+                <option value="BURZAK - 25 -  Spichlerz">BURZAK - 25 - Spichlerz</option>
+                <option value="BURZAK - 50 -  Spichlerz">BURZAK - 50 - Spichlerz</option>
+                <option value="BURZAK - 75 -  Spichlerz">BURZAK - 75 - Spichlerz</option>
+                <option value="BURZAK - 100 -  Spichlerz">BURZAK - 100 - Spichlerz</option>
 
                 </select>
+
+                        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                var selectElement = document.getElementById('parametr4');
+                var currentValue = "{{ rekord[4] }}";
+                selectElement.value = currentValue;
+            });
+        </script>
             </div>
             <div class="flex flex-col mb-4">
                 <label for="parametr3" class="mb-2">Date:</label>
@@ -72,9 +55,4 @@
             <input type="submit" value="Back to list" class="mt-5 px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600">
         </form>
     </section>
-</main>
-<footer class="w-full fixed bottom-0 bg-neutral-800 text-white py-5 px-10 text-center mt-20">
-{% include 'footer.html' %}
-</footer>
-</body>
-</html>
+{% include 'bottom.html' %}

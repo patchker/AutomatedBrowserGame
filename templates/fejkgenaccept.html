@@ -1,0 +1,46 @@
+{% include 'top.html' %}
+
+<section class="bg-gray-50 py-10 px-10">
+    <h1 class="text-blue-400 text-3xl py-4">New generated fejk's ({{ ataki|length }})</h1>
+
+    <table class="min-w-full divide-y divide-gray-200 shadow-sm rounded-lg overflow-hidden">
+        <thead class="bg-gray-50">
+            <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Wioska</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cel</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Czas wysłania ataku</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Czas dotarcia ataku</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Czas trwania ataku</th>
+            </tr>
+        </thead>
+        <tbody class="bg-gray-800 divide-y divide-gray-200">
+            {% for atak in ataki %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-white">{{ atak.wioska }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-white">{{ atak.cel }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-white">{{ atak.czas_startu }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-white">{{ atak.czas }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-white">{{ atak.travel_time/60 }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <p class="text-blue-400 text-lg py-2">Czy na pewno chcesz dodać te dane do bazy?</p>
+
+    <form action="/add_to_db2" method="POST" class="mt-4">
+        <!-- Możesz przekazać dane tabeli jako ukryte pola formularza -->
+        {% for atak in ataki %}
+            <input type="hidden" name="type" value="FAKE">
+            <input type="hidden" name="url" value="Brak">
+            <input type="hidden" name="date" value="{{ atak['czas_startu'] }}">
+            <input type="hidden" name="from_village" value="{{ atak['wioska'] }}">
+            <input type="hidden" name="target" value="{{ atak['cel'] }}">
+            <input type="hidden" name="massorsingle" value="0">
+        {% endfor %}
+
+        <input type="submit" value="Dodaj do bazy" class="px-5 py-2 bg-blue-500 hover:bg-blue-400 text-white font-bold rounded-lg shadow-lg cursor-pointer">
+    </form>
+</section>
+
+{% include 'bottom.html' %}

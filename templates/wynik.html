@@ -1,35 +1,11 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wynik</title>
-    <link rel="stylesheet" href="../static/styles.css">
-    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-</head>
-<body>
-<header>
-    <a href="/"><h1>patchker inc.</h1></a>
-
-</header>
-
-<div class="cont">
-<ul>
-    <a href="/"><li>HOME</li></a>
-    <a href="/lista"><li>LIST</li></a>
-    <a href="/wyslane"><li>SENT ATTACKS</li></a>
-    <a href="/niewyslane"><li>NOT SENT ATTACKS</li></a>
+{% include 'top.html' %}
 
 
-</ul>
-</div>
+
 <div class="container">
     <h1>LOGS</h1>
     <p>{{ wynik }}</p>
     <a href="{{ url_for('home') }}">Powrót do strony głównej</a>
 </div>
-</body>
-<footer>
-    patchker inc.
-</footer>
-</html>
+
+{% include 'bottom.html' %}

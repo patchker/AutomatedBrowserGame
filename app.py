@@ -1,21 +1,23 @@
-from flask import Flask, render_template, request, redirect, url_for
+import json
 import re
-from flask import request, jsonify
-from bs4 import BeautifulSoup
 import time
-import sqlite3
 import requests
-from dateutil.parser import parse
-import random
-from selenium.webdriver.support.ui import Select
-from datetime import datetime, timedelta
+from bs4 import BeautifulSoup
+from flask import Flask, render_template
+from flask import redirect, url_for
+from flask import request, jsonify
 from flask_cors import CORS
-from selenium.webdriver.support import expected_conditions as EC
 from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from selenium.webdriver.common.by import By
+import pandas as pd
+from collections import defaultdict
+import sqlite3
+from datetime import datetime, timedelta
+import math
+import scripto
+import os
+import signal
 
 print("""
               _       _     _               _              
@@ -41,7 +43,9 @@ def init_db():
             parametr1 TEXT,
             parametr2 TEXT,
             data TEXT,
-            attacktype TEXT
+            attacktype TEXT,
+            size INT,
+            units TEXT
         )
     ''')
 
@@ -58,13 +62,452 @@ def init_db():
         )
     ''')
 
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS wojska (
+            id INTEGER PRIMARY KEY,
+            coords TEXT,
+            unit_count TEXT
+        )
+    ''')
+
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS przybywajace (
+            id INTEGER PRIMARY KEY,
+            defender_coords TEXT,
+            attacker_coords TEXT,
+            arrival_time TEXT
+        )
+    ''')
+    c.execute("CREATE TABLE IF NOT EXISTS server_status (id INTEGER PRIMARY KEY, status TEXT)")
     conn.commit()
     conn.close()
+
+
+
+@app.route('/shutdown', methods=['POST'])
+def shutdown():
+    print("Shutting down gracefully...")
+    # Aktualizacja stanu serwera w bazie danych
+    conn = sqlite3.connect('data.db')
+    c = conn.cursor()
+    c.execute("UPDATE server_status SET status = 'inactive' WHERE id = 1")
+    conn.commit()
+    conn.close()
+    return 'Server shutting down...'
+@app.route('/status', methods=['GET'])
+def status():
+    conn = sqlite3.connect('data.db')
+    c = conn.cursor()
+    c.execute('SELECT status FROM server_status')
+    server_status = c.fetchone()
+    conn.close()
+    return {'status': server_status[0]}
+
+@app.route('/getDataFromSite')
+def getDataFromSite():
+
+    options = Options()
+    options.add_argument('--user-data-dir=/path/to/user-data')
+    options.add_argument('--profile-directory=Default')
+    options.add_argument("--start-minimized")
+    options.add_extension("windscribe.crx")
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+
+    options.add_argument(
+        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537")
+    driver = webdriver.Chrome(options=options)
+    time.sleep(1)
+    driver.get("https://plemiona.pl")
+    time.sleep(1)
+
+    try:
+        challenge_container = driver.find_element(By.CLASS_NAME, "challenge-container")
+        return False, "E.01 - Znaleziono captcha"
+    except:
+        pass
+
+    try:
+        iframe = driver.find_element(By.XPATH, "//iframe[@title='Main content of the hCaptcha challenge']")
+        return False, "E.02 - Znaleziono captcha"
+    except Exception as e:
+        pass
+
+    time.sleep(1)
+    try:
+        logout_link = driver.find_element(By.XPATH, "//a[@href='/page/logout']")
+    except:
+        return False, "E.03 - Wylogowano ze strony"
+
+    try:
+        challenge_container = driver.find_element(By.XPATH, "//span[text()='Świat 182']")
+        challenge_container.click()
+    except:
+        return False, "E.04 - Nie znaleziono swiata 182"
+
+    try:
+        challenge_container = driver.find_element(By.CLASS_NAME, "popup_box_close")
+        challenge_container.click()
+    except:
+        pass
+
+    try:
+        element = driver.find_element(By.XPATH, '//a[contains(text(), "Kombinowany ")]')
+        element.click()
+        time.sleep(1)
+    except:
+        pass
+
+    try:
+        element = driver.find_element(By.CLASS_NAME, "group-menu-item")
+        element.click()
+        time.sleep(1)
+    except:
+        pass
+
+    current_url = driver.current_url
+
+    response = requests.get(current_url)
+
+    if response.status_code == 200:
+        html_content = response.text
+
+    # Pobierz kod źródłowy strony
+    html_content = driver.page_source
+
+    # Przetwarzanie kodu HTML za pomocą BeautifulSoup
+    soup = BeautifulSoup(html_content, "html.parser")
+
+
+    # Szukamy wszystkich wierszy w tabeli
+    rows = soup.find('table', {'id': 'combined_table'}).find_all('tr')
+
+    # Pomijamy pierwszy wiersz, ponieważ zawiera on nagłówki
+    rows = rows[1:]
+    results = []
+    conn = sqlite3.connect("data.db")
+    c = conn.cursor()
+    # Przechodzimy przez każdy wiersz i zbieramy informacje
+    for row in rows:
+        # Szukamy linku do wioski, który zawiera jej nazwę i koordynaty
+        village_link = row.find('a', href=True)
+
+        # Wydobywamy koordynaty z nazwy wioski
+        name_and_coords = village_link.text
+        coords = name_and_coords.split('(')[-1].split(')')[0]
+        x, y = coords.split('|')
+
+        # Szukamy ilości wojsk w wiosce
+        units = row.find_all('td', {'class': 'unit-item'})
+        unit_counts = [int(unit.text) for unit in units if unit.text != '']
+
+        print(f"Wioska: {name_and_coords}")
+        print(f"Koordynaty: X={x}, Y={y}")
+        print(f"Ilość wojsk: {unit_counts}")
+        # Dodaj dane do tabeli
+        c.execute("INSERT INTO wojska (coords, unit_count) VALUES (?, ?)",
+                  (coords, ','.join(map(str, unit_counts))))
+
+        print("Inserting:", coords, " ", unit_counts)
+
+        conn.commit()
+
+    conn.close()
+    driver.quit()
+    return True
+
+
+@app.route('/getDataFromSite')
+def getPrzybywajaceFromSite():
+
+    options = Options()
+    options.add_argument('--user-data-dir=/path/to/user-data')
+    options.add_argument('--profile-directory=Default')
+    options.add_argument("--start-minimized")
+    options.add_extension("windscribe.crx")
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+
+    options.add_argument(
+        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537")
+    driver = webdriver.Chrome(options=options)
+    time.sleep(1)
+    driver.get("https://plemiona.pl")
+    time.sleep(1)
+
+    try:
+        challenge_container = driver.find_element(By.CLASS_NAME, "challenge-container")
+        return False, "E.01 - Znaleziono captcha"
+    except:
+        pass
+
+    try:
+        iframe = driver.find_element(By.XPATH, "//iframe[@title='Main content of the hCaptcha challenge']")
+        return False, "E.02 - Znaleziono captcha"
+    except Exception as e:
+        pass
+
+    time.sleep(1)
+    try:
+        logout_link = driver.find_element(By.XPATH, "//a[@href='/page/logout']")
+    except:
+        return False, "E.03 - Wylogowano ze strony"
+
+    try:
+        challenge_container = driver.find_element(By.XPATH, "//span[text()='Świat 182']")
+        challenge_container.click()
+    except:
+        return False, "E.04 - Nie znaleziono swiata 182"
+
+    try:
+        challenge_container = driver.find_element(By.CLASS_NAME, "popup_box_close")
+        challenge_container.click()
+    except:
+        pass
+
+    try:
+        element = driver.find_element(By.ID, 'incomings_amount')
+        element.click()
+        time.sleep(1)
+    except:
+        pass
+
+    try:
+        element = driver.find_element(By.CLASS_NAME, "group-menu-item")
+        element.click()
+        time.sleep(1)
+    except:
+        pass
+
+    current_url = driver.current_url
+
+    response = requests.get(current_url)
+
+    if response.status_code == 200:
+        html_content = response.text
+
+    # Pobierz kod źródłowy strony
+    html_content = driver.page_source
+
+    # Przetwarzanie kodu HTML za pomocą BeautifulSoup
+    soup = BeautifulSoup(html_content, "html.parser")
+
+    # Szukamy wszystkich wierszy w tabeli
+    rows = soup.find('table', {'id': 'incomings_table'}).find_all('tr')
+    print(rows)
+
+    # Pomijamy pierwszy wiersz, ponieważ zawiera on nagłówki
+    rows = rows[1:]
+    results = []
+    conn = sqlite3.connect("data.db")
+    c = conn.cursor()
+
+    data = []
+    for row in rows[1:]:
+        cols = row.find_all('td')
+
+        try:
+            target = re.search(r'\((\d+\|\d+)\)', cols[1].find('a').get_text(strip=True)).group(1)
+            origin = re.search(r'\((\d+\|\d+)\)', cols[2].find('a').get_text(strip=True)).group(1)
+            arrival_time_str = cols[5].get_text(strip=True)
+
+            # Sprawdź, czy jest to data "dzisiaj" czy "jutro" i przetwórz ją odpowiednio
+            if "dzisiaj" in arrival_time_str:
+                date_str = datetime.today().strftime('%Y-%m-%d')
+            elif "jutro" in arrival_time_str:
+                date_str = (datetime.today() + timedelta(days=1)).strftime('%Y-%m-%d')
+            else:
+                # jeśli nie jest ani "dzisiaj" ani "jutro", po prostu zignoruj
+                continue
+
+            # Usuń "dzisiaj o " lub "jutro o " z arrival_time_str
+            time_str = re.search(r'(\d+:\d+:\d+:\d+)', arrival_time_str).group(1)
+
+            # Połącz date_str i time_str
+            arrival_time = date_str + ' ' + time_str
+            data.append({
+                'target': target,
+                'origin': origin,
+                'arrival_time': arrival_time
+            })
+            # Dodaj dane do tabeli
+            c.execute("INSERT INTO przybywajace (defender_coords, attacker_coords,arrival_time) VALUES (?, ?, ?)",
+                      (target, origin, arrival_time))
+            conn.commit()
+
+            print("Inserting:", target, " ", origin," ", arrival_time)
+
+        except IndexError:
+            print("Błąd w parsowaniu wiersza.")
+
+        #print(data)
+
+        # Dodaj dane do tabeli
+        #c.execute("INSERT INTO przybywajace (defender_coords, attacker_coords, arrival_time) VALUES (?, ?, ?)",
+          #        (target_coords, source_coords, arrival_time))
+
+
+
+       # print("Inserting:", target_coords, " ", source_coords, " ", arrival_time)
+
+
+    conn.close()
+    driver.quit()
+    return True
+
+
+@app.route('/secret')
+def secret():
+
+    conn = sqlite3.connect('data.db')
+    c = conn.cursor()
+    c.execute('SELECT * FROM wojska')
+    results = c.fetchall()
+    conn.close()
+
+    # Przekształć wyniki
+    transformed_results = []
+    for result in results:
+        # Zamień ciąg znaków '0,0,0,0,0,0,0,0,0,0,0' na listę liczb [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        units_as_list = [int(x) for x in result[2].split(',')]
+        transformed_result = (result[0], result[1], units_as_list)
+        transformed_results.append(transformed_result)
+    conn = sqlite3.connect('data.db')
+    c = conn.cursor()
+    c.execute('SELECT * FROM przybywajace')
+    results2 = c.fetchall()
+    conn.close()
+    # załóżmy, że `results2` jest listą krotek
+    df = pd.DataFrame(results2, columns=['ID', 'Obrońca', 'Atakujący', 'Data wejścia'])
+
+    grouped_results = df.groupby('Obrońca')
+
+    return render_template('secret.html', results=transformed_results, results2 = grouped_results)  # Przekazujemy wyniki do szablonu
+
+@app.route('/secretUpdate')
+def secretUpdate():
+    results = getDataFromSite()
+    conn = sqlite3.connect('data.db')
+    c = conn.cursor()
+    c.execute('SELECT * FROM wojska')
+    results = c.fetchall()
+    conn.close()
+    # Przekształć wyniki
+    transformed_results = []
+    for result in results:
+        # Zamień ciąg znaków '0,0,0,0,0,0,0,0,0,0,0' na listę liczb [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        units_as_list = [int(x) for x in result[2].split(',')]
+        transformed_result = (result[0], result[1], units_as_list)
+        transformed_results.append(transformed_result)
+
+    print("Wypisywanie updata: ",results)
+    return render_template('secret.html', results=results)  # Przekazujemy wyniki do szablonu
+
+
+
+import random
+
+@app.route('/fejkgen', methods=['GET', 'POST'])
+def fejkgen():
+    liczba = int(request.form.get('liczba'))
+    lista = request.form.get('lista').split(' ')
+    random.shuffle(lista)  # shuffle the targets
+    data = request.form.get('data')
+    target_date = datetime.strptime(data, '%Y-%m-%d')  # adjust to your datetime format
+    used_start_times = []  # change this to a list
+
+    conn = sqlite3.connect('data.db')  # connect to your sqlite3 database
+    c = conn.cursor()
+
+    c.execute("SELECT * FROM wojska")
+    my_villages = c.fetchall()
+    print(my_villages)
+    ataki = []
+    attacks_from_village = defaultdict(int)  # stores how many attacks we sent from each village
+
+    used_attack_intervals = []  # store all used attack intervals
+
+    for my_village in my_villages:
+        my_coords = tuple(map(int, my_village[1].split('|')))
+        for enemy_coords_str in lista:
+            enemy_coords = tuple(map(int, enemy_coords_str.split('|')))
+
+            # check if we can still send attacks from this village
+            if attacks_from_village[my_village[0]] >= liczba:
+                continue
+
+            distance = math.sqrt((enemy_coords[0] - my_coords[0]) ** 2 + (enemy_coords[1] - my_coords[1]) ** 2)
+            travel_time = timedelta(minutes=distance * 30)  # minutes
+
+            max_attempts = 200
+            for attempt in range(max_attempts):
+                # generate a random arrival time between 7:00 and 22:59 on the target date
+                random_hour = random.randint(7, 22)
+                random_minute = random.randint(0, 59)
+                arrival_time = target_date.replace(hour=random_hour, minute=random_minute)
+
+                # calculate start time
+                start_time = arrival_time - travel_time
+
+                # calculate end time (one minute after start time)
+                end_time = start_time + timedelta(minutes=1)
+
+                # check if start time is later than current time, hasn't been used yet
+                current_time = datetime.now()
+                if start_time < current_time or not (7 <= arrival_time.hour <= 22):
+                    # this attack cannot be launched, arrival time is not suitable
+                    continue
+
+                # check if this attack overlaps with any of the previous attacks
+                if any(start_time < interval_end and end_time > interval_start for interval_start, interval_end in used_attack_intervals):
+                    # this attack cannot be launched, its time interval overlaps with one of the previous attacks
+                    continue
+
+                print(f'Atak z {my_coords} na {enemy_coords} wychodzi o {start_time} i dociera o {arrival_time}')
+                ataki.append({
+                    'wioska': '|'.join(map(str, my_coords)),
+                    'cel': '|'.join(map(str, enemy_coords)),
+                    'czas': arrival_time.replace(microsecond=0).isoformat() + '.000',
+                    'czas_startu': start_time.replace(microsecond=0).isoformat() + '.000',
+                    'travel_time': travel_time.total_seconds() / 60
+                })
+
+                attacks_from_village[my_village[0]] += 1  # increment the number of attacks sent from this village
+                lista.remove(enemy_coords_str)  # remove the selected target from the list to ensure it's not picked again
+                used_attack_intervals.append((start_time, end_time))  # add the time interval to the list of used intervals
+
+                break  # we found a target, no need to continue while loop
+
+    return render_template('fejkgenaccept.html', ataki=ataki)  # Przekazujemy wyniki do szablonu
+
+@app.route('/przybywajaceUpdate')
+def przybywajaceUpdate():
+    conn = sqlite3.connect('data.db')
+    c = conn.cursor()
+    c.execute('DELETE FROM przybywajace')
+    conn.commit()
+    conn.close()
+
+    results = getPrzybywajaceFromSite()
+    conn = sqlite3.connect('data.db')
+    c = conn.cursor()
+    c.execute('SELECT * FROM przybywajace')
+    results2 = c.fetchall()
+    conn.close()
+
+
+    print("Wypisywanie updata: ",results2)
+    return render_template('secret.html', results2=results2)  # Przekazujemy wyniki do szablonu
 
 
 @app.route('/', methods=['GET', 'POST'])
 def home():
     if request.method == 'POST':
+        global script_enabled
+        script_enabled = True
+        global is_stopping
+        is_stopping = False
+        print("[STARTED]")
         wynik = uruchom_moj_skrypt()
 
         return render_template('wynik.html', wynik=wynik)
@@ -84,6 +527,40 @@ def home():
     # Przekazuj informacje do szablonu
     return render_template('index.html', ostatni_atak=ostatni_atak, ilosc_niewyslanych=ilosc_niewyslanych)
 
+
+@app.route('/debug', methods=['GET', 'POST'])
+def debug():
+    if request.method == 'POST':
+        wynik = uruchom_debug()
+
+        return render_template('wynik.html', wynik=wynik)
+
+
+    return render_template('index.html')
+
+def uruchom_debug():
+    is_successful, message = debug()
+
+    if is_successful:
+        return message
+    else:
+        return f"Błąd: {message}"
+
+def debug():
+    options = Options()
+    options.add_argument('--user-data-dir=/path/to/user-data')
+    options.add_argument('--profile-directory=Default')
+    options.add_argument("--start-minimized")
+    options.add_extension("windscribe.crx")
+    options.add_argument('--headless')
+    options.add_argument('--no-sandbox')
+
+    options.add_argument(
+        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537")
+    driver = webdriver.Chrome(options=options)
+    time.sleep(1)
+    driver.get("https://plemiona.pl")
+    time.sleep(600)
 
 @app.route('/update_data', methods=['GET'])
 def update_data():
@@ -137,7 +614,24 @@ def lista():
     c.execute('SELECT * FROM data order by parametr3')
     rekordy = c.fetchall()
     conn.close()
-    return render_template('lista.html', rekordy=rekordy)
+
+    # Zlicz różne typy ataków
+    licznik_typow_atakow = {
+        'FAKE': 0,
+        'OFF': 0,
+        'BURZAK': 0,
+        'FAKE SZLACHCIC': 0,
+        'SZLACHCIC': 0
+    }
+    for rekord in rekordy:
+        typ_ataku = rekord[4]
+        if typ_ataku and typ_ataku.startswith('BURZAK'):
+            licznik_typow_atakow['BURZAK'] += 1
+        elif typ_ataku in licznik_typow_atakow:
+            licznik_typow_atakow[typ_ataku] += 1
+
+    return render_template('lista.html', rekordy=rekordy, licznik_typow_atakow=licznik_typow_atakow)
+
 
 
 @app.route('/wyslane')
@@ -146,8 +640,14 @@ def wyslane():
     c = conn.cursor()
     c.execute('SELECT * FROM wyslane order by data')
     rekordy = c.fetchall()
+
+    for i, rekord in enumerate(rekordy):
+        rekordy[i] = list(rekord)
+        rekordy[i][6] = json.loads(rekordy[i][6])
+
     conn.close()
     return render_template('wyslane.html', rekordy=rekordy)
+
 
 
 @app.route('/niewyslane')
@@ -442,7 +942,31 @@ def process_text():
 
     return render_template('table_page.html', table_data=attacks)
 
+@app.route('/add_to_db2', methods=['POST'])
+def add_to_db2():
+    types = request.form.getlist('type')
+    dates = request.form.getlist('date')
+    from_villages = request.form.getlist('from_village')
+    targets = request.form.getlist('target')
+    urls = request.form.getlist('url')
+    massorsingle = request.form.getlist('massorsingle')
 
+    conn = sqlite3.connect("data.db")
+    c = conn.cursor()
+    for i in range(len(types)):
+        type = types[i]
+        date = dates[i]
+        from_village = from_villages[i]
+        target = targets[i]
+        url = urls[i]  # przypisujemy url
+        massorsingle2 = massorsingle[i]  # przypisujemy url
+
+        c.execute("INSERT INTO data (parametr4, parametr3, parametr1, parametr2, parametr5,parametr6) VALUES (?, ?, ?, ?, ?,?)",(type, date, from_village, target, url, massorsingle2))  # dodajemy url do zapytania SQL
+    conn.commit()
+    conn.close()
+
+
+    return redirect(url_for('lista'))
 @app.route('/add_to_db', methods=['POST'])
 def add_to_db():
     types = request.form.getlist('type')
@@ -497,491 +1021,21 @@ def add_to_db():
 
 
 
+
 def uruchom_moj_skrypt():
-    is_successful, message = scripto()
+    conn = sqlite3.connect('data.db')
+    c = conn.cursor()
+    c.execute("UPDATE server_status SET status = 'active' WHERE id = 1")
+    conn.commit()
+    conn.close()
+    is_successful, message = scripto.scripto()
 
     if is_successful:
         return message
     else:
         return f"Błąd: {message}"
 
-def scripto():
-    def send_attack():
-        try:
-            id_record = row[0]
-            parametr1 = row[1]
-            parametr2 = row[2]
-            attacktype = row[4]
-            url=row[5]
-            massorsingle=row[6]
-
-            print(row[0],row[1],row[2],row[4],row[5],row[6])
-
-            data = date_str
-            dt = datetime.strptime(data, '%Y-%m-%dT%H:%M:%S.%f')
-
-            # Ustaw logowanie dla przeglądarki
-            d = DesiredCapabilities.CHROME
-            d['goog:loggingPrefs'] = {'browser': 'ALL'}
-            options = Options()
-            options.add_argument('--user-data-dir=/path/to/user-data')
-            options.add_argument('--profile-directory=Default')
-            options.add_argument("--start-minimized")
-            options.add_extension("windscribe.crx")
-            #options.add_argument('--headless')
-            #options.add_argument('--no-sandbox')
-
-            options.add_argument(
-                "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537")
-
-            driver = webdriver.Chrome(desired_capabilities=d, options=options)
-            godzina = dt.hour
-            minuta = dt.minute
-            sekunda = dt.second
-            ms = dt.microsecond / 1000
-            ms2 = str(ms)
-            godzina2 = str(godzina)
-            minuta2 = str(minuta)
-
-            if sekunda < 10:
-                sekunda2 = str(0) + str(sekunda)
-            else:
-                sekunda2 = str(sekunda)
-
-            if minuta < 10:
-                minuta2 = str(0) + str(minuta2)
-            else:
-                minuta2 = str(minuta)
-
-            time.sleep(1)
-            if massorsingle == "1":
-
-                driver.get(url)
-
-                try:
-                    challenge_container = driver.find_element(By.XPATH, "//span[text()='Świat 182']")
-                    challenge_container.click()
-                    time.sleep(1)
-                    driver.get(url)
-
-                except:
-                    return False, "E.04 - Nie znaleziono swiata 182"
-
-
-                try:
-                    challenge_container = driver.find_element(By.CLASS_NAME, "challenge-container")
-                    return False, "E.01 - Znaleziono captcha"
-                except:
-                    pass
-
-                try:
-                    iframe = driver.find_element(By.XPATH, "//iframe[@title='Main content of the hCaptcha challenge']")
-                    return False, "E.02 - Znaleziono captcha"
-                except Exception as e:
-                    pass
-
-
-            else:
-                time.sleep(1)
-                driver.get("https://plemiona.pl")
-
-                time.sleep(1)
-
-                try:
-                    challenge_container = driver.find_element(By.CLASS_NAME, "challenge-container")
-                    return False, "E.01 - Znaleziono captcha"
-                except:
-                    pass
-
-                try:
-                    iframe = driver.find_element(By.XPATH, "//iframe[@title='Main content of the hCaptcha challenge']")
-                    return False, "E.02 - Znaleziono captcha"
-                except Exception as e:
-                    pass
-
-                time.sleep(1)
-                try:
-                    logout_link = driver.find_element(By.XPATH, "//a[@href='/page/logout']")
-                except:
-                    return False, "E.03 - Wylogowano ze strony"
-
-                try:
-                    challenge_container = driver.find_element(By.XPATH, "//span[text()='Świat 182']")
-                    challenge_container.click()
-                except:
-                    return False, "E.04 - Nie znaleziono swiata 182"
-
-                try:
-                    challenge_container = driver.find_element(By.CLASS_NAME, "popup_box_close")
-                    challenge_container.click()
-                except:
-                    pass
-
-                try:
-                    element = driver.find_element(By.XPATH, '//a[contains(text(), "Kombinowany ")]')
-                    element.click()
-                    time.sleep(1)
-                except:
-                    pass
-
-                try:
-                    element = driver.find_element(By.CLASS_NAME, "group-menu-item")
-                    element.click()
-                    time.sleep(1)
-                except:
-                    pass
-
-                current_url = driver.current_url
-
-                response = requests.get(current_url)
-
-                if response.status_code == 200:
-                    html_content = response.text
-
-                # Pobierz kod źródłowy strony
-                html_content = driver.page_source
-
-                # Przetwarzanie kodu HTML za pomocą BeautifulSoup
-                soup = BeautifulSoup(html_content, "html.parser")
-                try:
-
-                    villages = soup.find_all("tr", class_="nowrap")
-                    for village in villages:
-                        # Pobieranie identyfikatora wioski
-                        village_id = village.find("span", class_="quickedit-vn")["data-id"]
-
-                        # Pobieranie koordynatów wioski
-                        village_coordinates_raw = village.find("span", class_="quickedit-label").text
-                        village_coordinates = village_coordinates_raw.split('(')[1].split(')')[0]
-
-                        if village_coordinates == parametr1:
-                            driver.get("https://pl182.plemiona.pl/game.php?village=" + village_id + "&screen=place")
-                            break
-                    else:
-                        return False, "E.07 - Nie znaleziono wioski atakującego o podanych koordynatach"
-                except:
-                    return False, "E.07 - Błąd pobierania id wiosek"
-
-
-            time.sleep(1)
-
-            if attacktype == "OFF":
-                try:
-                    topy = driver.find_element(By.ID, "units_entry_all_axe").text
-                    topy = topy[1:-1]
-
-                    lk = driver.find_element(By.ID, "units_entry_all_light").text
-                    lk = lk[1:-1]
-                    taran = driver.find_element(By.ID, "units_entry_all_ram").text
-                    taran = taran[1:-1]
-                    lukinakoniu = driver.find_element(By.ID, "units_entry_all_marcher").text
-                    lukinakoniu = lukinakoniu[1:-1]
-                    zwiad = driver.find_element(By.ID, "units_entry_all_spy").text
-                    zwiad = zwiad[1:-1]
-                except:
-                    return False, "E.08 - Błąd pobierania aktualnych jednostek"
-
-                if int(taran) < 21:
-                    taran = 0
-                if int(zwiad) < 10:
-                    zwiad = 0
-                else:
-                    zwiad = 10
-                try:
-
-                    topyinput = driver.find_element(By.ID, "unit_input_axe")
-                    topyinput.send_keys(int(topy) - 200)
-                    lkinput = driver.find_element(By.ID, "unit_input_light")
-                    lkinput.send_keys(int(lk) - 100)
-                    raminput = driver.find_element(By.ID, "unit_input_ram")
-                    raminput.send_keys(int(taran) - 20)
-                    raminput = driver.find_element(By.ID, "unit_input_marcher")
-                    raminput.send_keys(int(lukinakoniu))
-                    zwiadinput = driver.find_element(By.ID, "unit_input_spy")
-                    zwiadinput.send_keys(int(zwiad))
-                except:
-                    return False, "E.09 - Błąd wpisania jednostek"
-
-                time.sleep(3)
-            elif attacktype == "FAKE":
-
-                try:
-                    # Szukanie elementu z tekstem "hfghg" i klasą "quickbar_link"
-                    # element = driver.find_element(By.XPATH, "//a[@class='quickbar_link' and contains(.,'PLEMSY')]")
-                    element = driver.find_element(By.XPATH, '//a[@class="quickbar_link" and contains(., "PLEMSY")]')
-                    # element = driver.find_element(By.CSS_SELECTOR,'.quickbar_link[data-hash="5aeacdb8fdbe6255c2bd7e1e423408c8"]')
-                    element.click()
-                    time.sleep(1)
-                except:
-                    return False, "E.10 - Błąd podczas uzywania skryptu fake"
-
-            elif attacktype[:6] == "BURZAK":
-
-                try:
-
-                    # Rozdzielamy tekst na części używając ' - ' jako separatora
-                    parts = attacktype.split(' - ')
-
-                    # Pierwsza część (indeks 0) to "BURZAK", druga część (indeks 1) to "200", trzecia część (indeks 2) to "Zagroda"
-
-                    # Przekształcamy "200" na liczbę
-                    number = int(parts[1])
-
-                    # Trzecia część to "Zagroda", więc to przypisujemy do zmiennej "building"
-                    building = parts[2]
-
-                    topy = driver.find_element(By.ID, "units_entry_all_axe").text
-                    topy = topy[1:-1]
-                    pik = driver.find_element(By.ID, "units_entry_all_spear").text
-                    pik = pik[1:-1]
-
-                    lk = driver.find_element(By.ID, "units_entry_all_light").text
-                    lk = lk[1:-1]
-                    taran = driver.find_element(By.ID, "units_entry_all_ram").text
-                    taran = taran[1:-1]
-                    lukinakoniu = driver.find_element(By.ID, "units_entry_all_marcher").text
-                    lukinakoniu = lukinakoniu[1:-1]
-                    zwiad = driver.find_element(By.ID, "units_entry_all_spy").text
-                    zwiad = zwiad[1:-1]
-                    ciezka = driver.find_element(By.ID, "units_entry_all_heavy").text
-                    ciezka = ciezka[1:-1]
-                    katapulty = driver.find_element(By.ID, "units_entry_all_catapult").text
-                    katapulty = katapulty[1:-1]
-
-                    if int(ciezka)>50:
-                        heavyinput = driver.find_element(By.ID, "unit_input_heavy")
-                        heavyinput.send_keys(50)
-                    elif int(topy)>100:
-                        topyinput = driver.find_element(By.ID, "unit_input_axe")
-                        topyinput.send_keys(50)
-                    elif int(lk)>100:
-                        lkinput = driver.find_element(By.ID, "unit_input_light")
-                        lkinput.send_keys(50)
-                    elif int(pik)>100:
-                        pikinput = driver.find_element(By.ID, "unit_input_spear")
-                        pikinput.send_keys(50)
-
-                    katapultyinput = driver.find_element(By.ID, "unit_input_catapult")
-                    katapultyinput.send_keys(number)
-                    time.sleep(1)
-
-                except:
-                    return False, "E.16 - Błąd podczas burzaka"
-
-            elif attacktype == "FAKE SZLACHCIC":
-
-                try:
-                    topy = driver.find_element(By.ID, "units_entry_all_axe").text
-                    topy = topy[1:-1]
-                    pik = driver.find_element(By.ID, "units_entry_all_spear").text
-                    pik = pik[1:-1]
-                    lk = driver.find_element(By.ID, "units_entry_all_light").text
-                    lk = lk[1:-1]
-                    ciezka = driver.find_element(By.ID, "units_entry_all_heavy").text
-                    ciezka = ciezka[1:-1]
-
-                    if int(ciezka)>50:
-                        heavyinput = driver.find_element(By.ID, "unit_input_heavy")
-                        heavyinput.send_keys(25)
-                    elif int(topy)>100:
-                        topyinput = driver.find_element(By.ID, "unit_input_axe")
-                        topyinput.send_keys(50)
-                    elif int(lk)>25:
-                        lkinput = driver.find_element(By.ID, "unit_input_light")
-                        lkinput.send_keys(25)
-                    elif int(pik)>100:
-                        pikinput = driver.find_element(By.ID, "unit_input_spear")
-                        pikinput.send_keys(50)
-
-                    szlachcicinput = driver.find_element(By.ID, "unit_input_snob")
-                    szlachcicinput.send_keys(1)
-                    time.sleep(1)
-
-
-                except:
-                    return False, "E.14 - Błąd podczas FAKE SZLACHCICA"
-
-            elif attacktype == "SZLACHCIC":
-
-                try:
-                    return False, "E.15 - SZLACHCIC"
-                except:
-                    pass
-
-            time.sleep(2)
-
-            def slow_type(element, text, delay=0.1):
-                for character in text:
-                    element.send_keys(character)
-                    time.sleep(delay)
-
-            try:
-                if massorsingle == "1" and attacktype == "FAKE":
-                    try:
-                        challenge_container = driver.find_element(By.CLASS_NAME, "village-delete")
-                        challenge_container.click()
-                        time.sleep(1)
-                    except:
-                        return False, "E.15 - Blad przy usuwaniu obrazka jebanego"
-
-                challenge_container = driver.find_element(By.CLASS_NAME, "target-input-field")
-                challenge_container.clear()
-                time.sleep(2)
-                slow_type(challenge_container, parametr2, delay=0.2)
-                time.sleep(2)
-            except:
-                return False, "E.11 - Błąd podczas wpisywania celu"
-
-            time.sleep(1)
-
-            try:
-                element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "target_attack")))
-                driver.execute_script("arguments[0].click();", element)
-
-            except:
-                return False, "E.12 - Błąd jeszcze na placu"
-
-            try:
-                challenge_container = driver.find_element(By.ID, "troop_confirm_submit")
-            except:
-                return False, "E.13 - Błędny cel lub jednostki"
-
-            try:
-                challenge_container = driver.find_element(By.NAME, "building")
-                # Utwórz obiekt Select
-                select = Select(challenge_container)
-                # Wybierz opcję za pomocą widocznego tekstu
-                select.select_by_visible_text(building)
-            except:
-                pass
-
-
-            time.sleep(2)
-
-            target_time = godzina2 + ":" + minuta2 + ":" + sekunda2
-            script = "let input='" + target_time + "';let inputMs='" + ms2 + "';let delayTime = parseInt(localStorage.delayTime);if (isNaN(delayTime)) {delayTime = 0;localStorage.delayTime = JSON.stringify(delayTime);}delayTime = 0;let delay = parseInt(delayTime) + parseInt(inputMs);let serverTime;attInterval = setInterval(function () {serverTime = document.getElementById('serverTime').textContent;if (serverTime >= input) {setTimeout(function () { document.getElementById('troop_confirm_submit').click(); }, delay);clearInterval(attInterval);}}, 5);"
-            driver.execute_script(script)
-
-            time.sleep(2)
-
-            def wait_until(hour, minute, second):
-                now = datetime.now()
-                target_time = now.replace(hour=hour, minute=minute, second=second, microsecond=0)
-
-                if now > target_time:
-                    # Jeśli czas docelowy już minął, ustaw na następny dzień
-                    target_time += timedelta(days=1)
-
-                # Oblicz czas oczekiwania w sekundach
-                wait_seconds = (target_time - now).total_seconds()
-                time.sleep(wait_seconds)
-
-            if sekunda < 55:
-                sekunda += 5
-            else:
-                sekunda = (sekunda + 5) % 60
-                if minuta < 59:
-                    minuta += 1
-                else:
-                    minuta = 0
-                    godzina = (godzina + 1) % 24
-
-            wait_until(godzina, minuta, sekunda)
-
-            try:
-                challenge_container = driver.find_element(By.ID, "command-data-form")
-                conn = sqlite3.connect('data.db')
-                c = conn.cursor()
-                c.execute("DELETE FROM data WHERE id = ?", (id_record,))
-                conn.commit()
-
-
-                driver.quit()
-                return True, "Success"
-
-            except:
-                return False, "E.19 - Błąd skryptu wysyłającego atak"
-
-
-        except Exception as e:
-            return False, str(e)
-
-
-    znaleziono_date = False
-    while not znaleziono_date:
-        conn = sqlite3.connect('data.db')
-        c = conn.cursor()
-        c.execute('SELECT * FROM data')
-        rows = c.fetchall()
-
-        for row in rows:
-            date_str = row[3]  # Pobierz datę z kolumny parametr3
-            date_obj = parse(date_str)  # Konwertuj ciąg znaków na obiekt datetime
-
-            now = datetime.now()  # Pobierz aktualny czas
-            time_diff = date_obj - now  # Oblicz różnicę czasu
-            id_record = row[0]
-            parametr1 = row[1]
-            parametr2 = row[2]
-            attacktype = row[4]
-            url = row[5]
-            massorsingle = row[6]
-
-            data = date_str
-            dt = datetime.strptime(data, '%Y-%m-%dT%H:%M:%S.%f')
-            X = parametr1
-            Y = parametr2
-            godzina = dt.hour
-            minuta = dt.minute
-            sekunda = dt.second
-            ms = dt.microsecond / 1000
-            ms2 = str(ms)
-            godzina2 = str(godzina)
-            minuta2 = str(minuta)
-
-            if sekunda < 10:
-                sekunda2 = str(0) + str(sekunda)
-            else:
-                sekunda2 = str(sekunda)
-
-            if minuta < 10:
-                minuta2 = str(0) + str(minuta2)
-            else:
-                minuta2 = str(minuta)
-
-            if timedelta(minutes=0) < time_diff <= timedelta(minutes=1):  # Sprawdź, czy do daty brakuje 2 minut
-                if len(rows) == 1:
-                    znaleziono_date = True
-
-                is_successful, message = send_attack()
-                # Sprawdź wynik
-                if is_successful:
-                    print("Wysłano atak pomyślnie!")
-                    # Dodaj informacje o ataku do tabeli 'wyslane'
-                    conn = sqlite3.connect('data.db')
-                    c = conn.cursor()
-                    c.execute("INSERT INTO wyslane(parametr1, parametr2, data, attacktype) VALUES (?, ?, ?, ?)",
-                              (parametr1, parametr2, data, attacktype))
-                    conn.commit()
-                else:
-                    print("Nie udało się wysłać ataku. Powód:", message)
-                    # Dodaj informacje o ataku do tabeli 'niewyslane'
-                    conn = sqlite3.connect('data.db')
-                    c = conn.cursor()
-                    c.execute(
-                        "INSERT INTO niewyslane(parametr1, parametr2, data, attacktype, reason, url, massorsingle) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                        (parametr1, parametr2, data, attacktype, message, url, massorsingle))
-                    print("URL:",url)
-                    c.execute("DELETE FROM data WHERE id = ?", (id_record,))
-                    conn.commit()
-
-        conn.close()
-        if not znaleziono_date:
-            time.sleep(10)  # Poczekaj 10s przed kolejnym sprawdzeniem
-
-    return True, "Zakończono działanie programu."
-
 
 if __name__ == '__main__':
+    CORS(app)
     app.run()
-    CORS(app)  # umożliwić CORS

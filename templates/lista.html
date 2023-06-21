@@ -1,31 +1,9 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Lista rekordów</title>
-    <link rel="stylesheet" href="../static/css/output.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-</head>
-<body class="bg-neutral-900 text-white flex flex-col min-h-full font-sanfrancisco">
-<header class="px-10 py-2 flex items-center justify-between bg-neutral-800">
-    <nav>
-        <ul class="flex space-x-4">
-                        <div class="flex items-center">
+{% include 'top.html' %}
 
-            <a href="/"><h1 class="text-3xl font-bold text-blue-500 font-custom px-5">patchker inc.</h1></a>
-                        </div>
-            <a href="/" class=" hover:text-blue-300 py-3"><li>HOME</li></a>
-            <a href="/lista" class="text-blue-400 hover:text-blue-300 py-3"><li>LIST</li></a>
-            <a href="/wyslane" class=" hover:text-blue-300 py-3"><li>SENT ATTACKS</li></a>
-            <a href="/niewyslane" class=" hover:text-blue-300 py-3"><li>NOT SENT ATTACKS</li></a>
-        </ul>
-    </nav>
-</header>
-<main class="mx-auto w-full flex-grow flex justify-center px-5 mb-20">
-    <section>
-        <h1 class="text-blue-400 text-3xl py-4">SCHEDULED ATTACKS ({{ rekordy|length }})</h1>
+        <section>
+        <h1 class="text-blue-400 text-3xl py-4">SCHEDULED ATTACKS ({{ rekordy|length }}), FAKE: ({{ licznik_typow_atakow['FAKE'] }}), OFF: ({{ licznik_typow_atakow['OFF'] }}) BURZAK: ({{ licznik_typow_atakow['BURZAK'] }}) FS: ({{ licznik_typow_atakow['FAKE SZLACHCIC'] }}) SZLACHCIC: ({{ licznik_typow_atakow['SZLACHCIC'] }}) </h1>
+
+
 <div class="relative inline-block w-64">
     <button class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 w-full mb-5">DELETE SOME DATA</button>
     <div class="absolute left-0 mt-1 py-2 w-full bg-transparent rounded-lg shadow-xl hidden" id="dropdown">
@@ -107,13 +85,12 @@
             </form>
         </div>
     </section>
-</main>
-<footer class="w-full fixed bottom-0 bg-neutral-800 text-white py-5 px-10 text-center mt-20">
-{% include 'footer.html' %}
-</footer>
 <script>
+
+
+
 $(document).ready(function(){
-    $(".delete-form").on('click', function(e){
+   $(".delete-form").on('click', function(e){
         e.preventDefault();
         var id = $(this).data('id');
         $.ajax({
@@ -127,16 +104,7 @@ $(document).ready(function(){
             }
         });
     });
-});
-</script>
-<script>
-$(document).ready(function(){
-    // Twoja istniejąca logika...
-    $(".delete-form").on('click', function(e){
-        // ...
-    });
 
-    // Dodaj nową logikę...
     var rows = $("table tr");
     for (var i = 1; i < rows.length - 1; i++) {  // Rozpocznij od 1, aby pominąć nagłówki tabeli
         var date1Cell = $(rows[i]).find("td")[4];  // Znajdź komórkę z datą
@@ -154,5 +122,5 @@ $(document).ready(function(){
     }
 });
 </script>
-</body>
-</html>
+
+{% include 'bottom.html' %}

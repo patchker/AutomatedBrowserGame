@@ -1,28 +1,5 @@
-<!DOCTYPE html>
-<html lang="pl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NOT SENT ATTACKS</title>
-    <link rel="stylesheet" href="../static/css/output.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-</head>
-<body class="bg-neutral-900 text-white flex flex-col min-h-full font-sanfrancisco">
-<header class="px-10 py-2 flex items-center justify-between bg-neutral-800">
-    <nav>
-        <ul class="flex space-x-4">
-            <div class="flex items-center">
-                <a href="/"><h1 class="text-3xl font-bold text-blue-500 font-custom px-5">patchker inc.</h1></a>
-            </div>
-            <a href="/" class="text-blue-400 hover:text-blue-300 py-3"><li>HOME</li></a>
-            <a href="/lista" class="text-blue-400 hover:text-blue-300 py-3"><li>LIST</li></a>
-            <a href="/wyslane" class="text-blue-400 hover:text-blue-300 py-3"><li>SENT ATTACKS</li></a>
-            <a href="/niewyslane" class="current-page text-blue-400 hover:text-blue-300 py-3"><li>NOT SENT ATTACKS</li></a>
-        </ul>
-    </nav>
-</header>
-<main class="mx-auto w-full flex-grow flex justify-center px-5">
+{% include 'top.html' %}
+
     <section>
         <h1 class="text-blue-400 text-3xl py-4">NOT SENT ATTACKS ({{ rekordy|length }})</h1>
         <form id="delete_all" action="{{ url_for('niewyslane_delete_all') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete all?');" class="mb-4">
@@ -30,14 +7,14 @@
         </form>
 <table class="w-full text-center mb-4 border-collapse border border-gray-600 rounded-lg overflow-hidden">
     <thead class="bg-blue-500 text-white border-0">
-            <th class="border-0 py-2 px-10">ID</th>
-            <th class="border-0 py-2 px-10">Type</th>
-            <th class="border-0 py-2 px-10">Manual send</th>
-            <th class="border-0 py-2 px-10">Attacker's Cords (XXX|YYY)</th>
-            <th class="border-0 py-2 px-10">Enemy Cords (XXX|YYY)</th>
-            <th class="border-0 py-2 px-10">Date</th>
-            <th class="border-0 py-2 px-10">Reason</th>
-            <th class="border-0 py-2 px-10">Action</th>
+            <th class="border-0 px-10">ID</th>
+            <th class="border-0 px-10">Type</th>
+            <th class="border-0 px-10">Manual send</th>
+            <th class="border-0 px-10">Attacker's Cords (XXX|YYY)</th>
+            <th class="border-0 px-10">Enemy Cords (XXX|YYY)</th>
+            <th class="border-0 px-10">Date</th>
+            <th class="border-0 px-10">Reason</th>
+            <th class="border-0 px-10">Action</th>
     </thead>
         {% for rekord in rekordy %}
             <tr id="row-{{ rekord[0] }}" class="text-white hover:bg-gray-700 transition-colors duration-200">
@@ -51,9 +28,9 @@
 
                 <td class="border border-gray-600 py-2  px-10">
                     <form action="{{ url_for('restore', id=rekord[0]) }}" method="POST" style="display:inline;">
-<input class="border-2 btn-blue border-blue-500 hover:bg-blue-500 text-blue-500 hover:text-white font-bold py-2 px-4 rounded-2xl transition-all duration-100 ease-in-out transform hover:-translate-y-1 hover:scale-105 active:scale-90 shadow-lg cursor-pointer" type="submit" value="Restore to list">
+<input class="border-2 btn-blue border-blue-500 hover:bg-blue-500 text-blue-500 hover:text-white font-bold py-2 px-4 rounded-2xl transition-all duration-100 ease-in-out transform hover:-translate-y-1 hover:scale-105 active:scale-90 shadow-lg cursor-pointer" type="submit" value="Restore">
                     </form>
-                    <form class="delete-form" data-id="{{ rekord[0] }}" method="POST" style="display:inline;">
+                    <form  class="delete-form" data-id="{{ rekord[0] }}" method="POST" style="display:inline;">
 <input class=" border-2 btn-red border-red-500 hover:bg-red-500 text-red-500 hover:text-white font-bold py-2 px-4 rounded-2xl transition-all duration-100 ease-in-out transform hover:-translate-y-1 hover:scale-105 active:scale-90 shadow-lg cursor-pointer" type="submit" value="Delete">
                     </form>
                 </td>
@@ -61,17 +38,14 @@
         {% endfor %}
     </table>
     </section>
-</main>
-<footer class="w-full fixed bottom-0 bg-neutral-800 text-white py-5 px-10 text-center mt-20">
-{% include 'footer.html' %}
-</footer>
+
 <script>
 $(document).ready(function(){
     $(".delete-form").on('click', function(e){
         e.preventDefault();
         var id = $(this).data('id');
         $.ajax({
-            url: '/usun_wyslane/' + id,
+            url: '/usun_niewyslane/' + id,
             type: 'POST',
             success: function(result) {
                 $('#row-' + id).remove();
@@ -83,5 +57,5 @@ $(document).ready(function(){
     });
 });
 </script>
-</body>
-</html>
+
+{% include 'bottom.html' %}
