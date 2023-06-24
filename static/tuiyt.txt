@@ -1,0 +1,40 @@
+Po Angielsku:
+
+"I am very interested in gaining practical experience in the field of computer science."
+"Could you please elaborate on the daily responsibilities of the intern?"
+"What are the opportunities for learning and development during this internship?"
+"What programming languages will I mainly use during the internship?"
+"Could you tell me more about the projects I will be working on?"
+"How do you evaluate the progress and performance of your interns?"
+"What qualities are you looking for in the ideal candidate for this internship?"
+
+Po Polsku:
+"Bardzo zależy mi na zdobyciu praktycznego doświadczenia w dziedzinie informatyki."
+"Czy mógłby Pan/Pani opowiedzieć więcej na temat codziennych obowiązków stażysty?"
+"Jakie są możliwości nauki i rozwoju podczas tego stażu?"
+"Jakich języków programowania głównie będę używać podczas stażu?"
+"Czy mógłby Pan/Pani opowiedzieć mi więcej o projektach, nad którymi będę pracować?"
+"Jak oceniacie postęp i wyniki pracy stażystów?"
+"Jakie cechy szukacie u idealnego kandydata na tego stażu?"
+
+Po Angielsku:
+
+"Hello everyone, thank you for having me. My name is [Your Name], and I am a computer science student at [Your University]."
+"Good morning/afternoon/evening. I appreciate the opportunity to meet with you today. I'm [Your Name], currently studying computer science at [Your University]."
+"Hi, I'm [Your Name]. I'm really excited to be here and learn more about the internship opportunities at your company."
+Po Polsku:
+
+"Dzień dobry wszystkim, dziękuję za zaproszenie. Nazywam się [Twoje Imię] i jestem studentem informatyki na [Twoja Uczelnia]."
+"Dobry wieczór/dzień. Doceniam możliwość spotkania się z Wami dzisiaj. Jestem [Twoje Imię], aktualnie studiuję informatykę na [Twoja Uczelnia]."
+"Cześć, jestem [Twoje Imię]. Bardzo cieszę się, że mogę tu być i dowiedzieć się więcej o możliwościach stażu w Waszej firmie."
+
+Dzień dobry,
+moje nazwisko Patryk Sioła. Jestem studentem 3 roku na kierunku Informatyka na Politechnice Śląskiej. Piszę z zapytaniem o możliwość odbycia czterotygodniowych praktyk zawodowych w Państwa firmie. Praktyki miałyby się odbyć między 13.07 a 06.09, chętnie z możliwością przedłużenia współpracy. Jeśli jest taka możliwość, chciałbym aby odbyły się one w trybie zdalnym.
+W trakcie moich studiów zdobyłem solidne podstawy teoretyczne z zakresu programowania, algorytmów, struktur danych oraz technologii webowych. Posiadam doświadczenie w pracy z językami programowania takimi jak JavaScript, C++ i Python. Dodatkowo, uczestniczyłem w kilku projektach na uczelni, które pozwoliły mi zdobyć praktyczne umiejętności pracy zespołowej.
+W załączniku przesyłam CV. Uprzejmie proszę o pozytywne rozpatrzenie mojej prośby oraz o odpowiedź.
+
+Z poważaniem,
+Patryk Sioła
+
+I thought we would only talk in Polish but ok, no problem.
+Knowledge is best tested when it's unexpected.

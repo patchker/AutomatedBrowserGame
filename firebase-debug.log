@@ -1,0 +1,78 @@
+[debug] [2023-06-08T11:29:43.520Z] ----------------------------------------------------------------------
+[debug] [2023-06-08T11:29:43.521Z] Command:       C:\Program Files\nodejs\node.exe C:\Users\patchker\AppData\Roaming\npm\node_modules\firebase-tools\lib\bin\firebase.js init functions
+[debug] [2023-06-08T11:29:43.522Z] CLI Version:   12.3.1
+[debug] [2023-06-08T11:29:43.522Z] Platform:      win32
+[debug] [2023-06-08T11:29:43.522Z] Node Version:  v18.16.0
+[debug] [2023-06-08T11:29:43.523Z] Time:          Thu Jun 08 2023 13:29:43 GMT+0200 (czas środkowoeuropejski letni)
+[debug] [2023-06-08T11:29:43.523Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2023-06-08T11:29:43.530Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2023-06-08T11:29:43.531Z] > authorizing via signed-in user (patrrxx@gmail.com)
+[info] 
+     ######## #### ########  ######## ########     ###     ######  ########
+     ##        ##  ##     ## ##       ##     ##  ##   ##  ##       ##
+     ######    ##  ########  ######   ########  #########  ######  ######
+     ##        ##  ##    ##  ##       ##     ## ##     ##       ## ##
+     ##       #### ##     ## ######## ########  ##     ##  ######  ########
+
+You're about to initialize a Firebase project in this directory:
+
+  C:\Users\patchker\PycharmProjects\plemsy\plemsy
+
+[info] 
+=== Project Setup
+[info] 
+[info] First, let's associate this project directory with a Firebase project.
+[info] You can create multiple project aliases by running firebase use --add, 
+[info] but for now we'll just set up a default project.
+[info] 
+[debug] [2023-06-08T11:30:16.096Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects pageSize=100
+[debug] [2023-06-08T11:30:16.702Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects 200
+[debug] [2023-06-08T11:30:16.703Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects [omitted]
+[info] i  Using project patchker-2ac7b (patchker) 
+[info] 
+=== Functions Setup
+[debug] [2023-06-08T11:30:19.597Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2023-06-08T11:30:19.597Z] > authorizing via signed-in user (patrrxx@gmail.com)
+[debug] [2023-06-08T11:30:19.597Z] [iam] checking project patchker-2ac7b for permissions ["firebase.projects.get"]
+[debug] [2023-06-08T11:30:19.598Z] >>> [apiv2][query] POST https://cloudresourcemanager.googleapis.com/v1/projects/patchker-2ac7b:testIamPermissions [none]
+[debug] [2023-06-08T11:30:19.598Z] >>> [apiv2][(partial)header] POST https://cloudresourcemanager.googleapis.com/v1/projects/patchker-2ac7b:testIamPermissions x-goog-quota-user=projects/patchker-2ac7b
+[debug] [2023-06-08T11:30:19.598Z] >>> [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/patchker-2ac7b:testIamPermissions {"permissions":["firebase.projects.get"]}
+[debug] [2023-06-08T11:30:20.400Z] <<< [apiv2][status] POST https://cloudresourcemanager.googleapis.com/v1/projects/patchker-2ac7b:testIamPermissions 200
+[debug] [2023-06-08T11:30:20.400Z] <<< [apiv2][body] POST https://cloudresourcemanager.googleapis.com/v1/projects/patchker-2ac7b:testIamPermissions {"permissions":["firebase.projects.get"]}
+[debug] [2023-06-08T11:30:20.401Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/patchker-2ac7b/services/cloudfunctions.googleapis.com [none]
+[debug] [2023-06-08T11:30:20.401Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/patchker-2ac7b/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/patchker-2ac7b
+[debug] [2023-06-08T11:30:20.402Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/patchker-2ac7b/services/runtimeconfig.googleapis.com [none]
+[debug] [2023-06-08T11:30:20.402Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/patchker-2ac7b/services/runtimeconfig.googleapis.com x-goog-quota-user=projects/patchker-2ac7b
+[debug] [2023-06-08T11:30:21.404Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/patchker-2ac7b/services/cloudfunctions.googleapis.com 200
+[debug] [2023-06-08T11:30:21.404Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/patchker-2ac7b/services/cloudfunctions.googleapis.com [omitted]
+[debug] [2023-06-08T11:30:21.404Z] >>> [apiv2][query] POST https://serviceusage.googleapis.com/v1/projects/patchker-2ac7b/services/cloudfunctions.googleapis.com:enable [none]
+[debug] [2023-06-08T11:30:21.404Z] >>> [apiv2][(partial)header] POST https://serviceusage.googleapis.com/v1/projects/patchker-2ac7b/services/cloudfunctions.googleapis.com:enable x-goog-quota-user=projects/patchker-2ac7b
+[debug] [2023-06-08T11:30:21.428Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/patchker-2ac7b/services/runtimeconfig.googleapis.com 200
+[debug] [2023-06-08T11:30:21.428Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/patchker-2ac7b/services/runtimeconfig.googleapis.com [omitted]
+[debug] [2023-06-08T11:30:22.923Z] <<< [apiv2][status] POST https://serviceusage.googleapis.com/v1/projects/patchker-2ac7b/services/cloudfunctions.googleapis.com:enable 200
+[debug] [2023-06-08T11:30:22.923Z] <<< [apiv2][body] POST https://serviceusage.googleapis.com/v1/projects/patchker-2ac7b/services/cloudfunctions.googleapis.com:enable [omitted]
+[debug] [2023-06-08T11:30:32.934Z] >>> [apiv2][query] GET https://serviceusage.googleapis.com/v1/projects/patchker-2ac7b/services/cloudfunctions.googleapis.com [none]
+[debug] [2023-06-08T11:30:32.934Z] >>> [apiv2][(partial)header] GET https://serviceusage.googleapis.com/v1/projects/patchker-2ac7b/services/cloudfunctions.googleapis.com x-goog-quota-user=projects/patchker-2ac7b
+[debug] [2023-06-08T11:30:33.918Z] <<< [apiv2][status] GET https://serviceusage.googleapis.com/v1/projects/patchker-2ac7b/services/cloudfunctions.googleapis.com 200
+[debug] [2023-06-08T11:30:33.918Z] <<< [apiv2][body] GET https://serviceusage.googleapis.com/v1/projects/patchker-2ac7b/services/cloudfunctions.googleapis.com [omitted]
+[info] Let's create a new codebase for your functions.
+[info] A directory corresponding to the codebase will be created in your project
+[info] with sample code pre-configured.
+
+[info] See https://firebase.google.com/docs/functions/organize-functions for
+[info] more information on organizing your functions using codebases.
+
+[info] Functions can be deployed with firebase deploy.
+
+[info] +  Wrote functions/requirements.txt 
+[info] +  Wrote functions/.gitignore 
+[info] +  Wrote functions/main.py 
+[debug] [2023-06-08T11:31:29.052Z] Running command with virtualenv: command="C:\Users\patchker\PycharmProjects\plemsy\plemsy\functions\venv\Scripts\activate.bat", args=["","&&","pip3","install","--upgrade","pip"]
+[debug] [2023-06-08T11:31:29.066Z] Error: spawn "C:\Users\patchker\PycharmProjects\plemsy\plemsy\functions\venv\Scripts\activate.bat" ENOENT
+    at notFoundError (C:\Users\patchker\AppData\Roaming\npm\node_modules\firebase-tools\node_modules\cross-spawn\lib\enoent.js:6:26)
+    at verifyENOENT (C:\Users\patchker\AppData\Roaming\npm\node_modules\firebase-tools\node_modules\cross-spawn\lib\enoent.js:40:16)
+    at cp.emit (C:\Users\patchker\AppData\Roaming\npm\node_modules\firebase-tools\node_modules\cross-spawn\lib\enoent.js:27:25)
+    at ChildProcess._handle.onexit (node:internal/child_process:291:12)
+[error] 
+[error] Error: An unexpected error has occurred.

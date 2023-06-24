@@ -1,0 +1,1 @@
+{"version":3,"sources":["base.css","components.css","utilities.css"],"names":[],"mappings":"AAAA,cAAc,CCAd,oBAAoB,CCApB,mBAAmB","file":"styles.css","sourceRoot":"..","sourcesContent":["@tailwind base;\n","@tailwind components;\n","@tailwind utilities;\n"]}

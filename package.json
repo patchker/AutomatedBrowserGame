@@ -1,0 +1,19 @@
+{
+  "name": "plemsy",
+  "version": "1.0.0",
+  "description": "",
+  "main": "tailwind.config.js",
+  "scripts": {
+    "build": "parcel build static/styles.css --out-dir static/css"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "tailwindcss": "^3.3.2"
+  },
+  "dependencies": {
+    "firebase": "^9.22.1",
+    "postcss-cli": "^10.1.0",
+    "tippy.js": "^6.3.7"
+  }
+}
