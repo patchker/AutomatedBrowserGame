@@ -35,7 +35,7 @@ def init_db():
     conn = sqlite3.connect('data.db')
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS data
-(id INTEGER PRIMARY KEY AUTOINCREMENT, parametr1 TEXT, parametr2 TEXT, parametr3 TEXT, parametr4 TEXT, parametr5 TEXT, parametr6 TEXT )''')
+(id INTEGER PRIMARY KEY AUTOINCREMENT, parametr1 TEXT, parametr2 TEXT, parametr3 TEXT, parametr4 TEXT, parametr5 TEXT, parametr6 TEXT, parametr7 TEXT )''')
     # Dodaj na początku kodu, np. po otwarciu połączenia z bazą danych
     c.execute('''
         CREATE TABLE IF NOT EXISTS wyslane (
@@ -78,9 +78,16 @@ def init_db():
             arrival_time TEXT
         )
     ''')
-    c.execute("CREATE TABLE IF NOT EXISTS server_status (id INTEGER PRIMARY KEY, status TEXT)")
+    # Sprawdź, czy tabela już istnieje
+# check if table exists
+    c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='server_status'")
+    if not c.fetchone():
+        # if table doesn't exist, create it
+        c.execute("CREATE TABLE server_status (id INTEGER PRIMARY KEY, status TEXT)")
+        c.execute("INSERT INTO server_status (status) VALUES (?)", ('inactive',))
     conn.commit()
     conn.close()
+
 
 
 
@@ -829,6 +836,7 @@ def zapisz():
     parametr3 = request.form.get('parametr3')
     parametr4 = request.form.get('parametr4')
     parametr5 = request.form.get('parametr5')
+    parametr7 = request.form.get('parametr7')
 
 
     # Sprawdzenie i poprawienie wartości parametr3
@@ -854,8 +862,8 @@ def zapisz():
 
     conn = sqlite3.connect("data.db")
     c = conn.cursor()
-    c.execute("INSERT INTO data (parametr1, parametr2, parametr3, parametr4, parametr5, parametr6) VALUES (?, ?, ?,?,?,?)",
-              (parametr1, parametr2, parametr3, parametr4, parametr5, "0"))
+    c.execute("INSERT INTO data (parametr1, parametr2, parametr3, parametr4, parametr5, parametr6,parametr7) VALUES (?, ?, ?,?,?,?,?)",
+              (parametr1, parametr2, parametr3, parametr4, parametr5, "0", parametr7))
     conn.commit()
     conn.close()
 
@@ -905,16 +913,20 @@ def process_text():
                 elif 'fake' in attack_type:
                     attack['type'] = 'FAKE'
                 elif 'Katapulty' in attack_type:
-
                     units_building = attack_type.split('-')
                     attack['type'] = 'BURZAK - '+units_building[1]+" - "+units_building[2]
-
-
                 else:
                     if int(next_column)>0:
                         attack['type'] = 'SZLACHCIC'
+                        units = re.search(r'\[\|\](\d+)', line)
+                        if units:
+                            attack['units'] = int(units.group(1))
                     else:
                         attack['type'] = 'OFF'
+                        # dodanie ilości jednostek do ataku typu OFF
+                        units = re.search(r'\[\|\](\d+)', line)
+                        if units:
+                            attack['units'] = int(units.group(1))
 
 
 
@@ -937,9 +949,6 @@ def process_text():
 
             attacks.append(attack)
 
-    for attack in attacks:
-        print(attack)
-
     return render_template('table_page.html', table_data=attacks)
 
 @app.route('/add_to_db2', methods=['POST'])
@@ -950,6 +959,8 @@ def add_to_db2():
     targets = request.form.getlist('target')
     urls = request.form.getlist('url')
     massorsingle = request.form.getlist('massorsingle')
+    units = request.form.getlist('units')
+
 
     conn = sqlite3.connect("data.db")
     c = conn.cursor()
@@ -960,6 +971,8 @@ def add_to_db2():
         target = targets[i]
         url = urls[i]  # przypisujemy url
         massorsingle2 = massorsingle[i]  # przypisujemy url
+        units2=units[i]
+        print(units2)
 
         c.execute("INSERT INTO data (parametr4, parametr3, parametr1, parametr2, parametr5,parametr6) VALUES (?, ?, ?, ?, ?,?)",(type, date, from_village, target, url, massorsingle2))  # dodajemy url do zapytania SQL
     conn.commit()
@@ -974,8 +987,7 @@ def add_to_db():
     from_villages = request.form.getlist('from_village')
     targets = request.form.getlist('target')
     urls = request.form.getlist('url')  # dodajemy odczytywanie url
-    print(urls)
-
+    units = request.form.getlist('units')
     conn = sqlite3.connect("data.db")
     c = conn.cursor()
 
@@ -988,6 +1000,8 @@ def add_to_db():
         from_village = from_villages[i]
         target = targets[i]
         url = urls[i]  # przypisujemy url
+        units2=units[i]
+
 
         date_str, start_time_str, end_time_str = date.split(' ')
 
@@ -1012,8 +1026,8 @@ def add_to_db():
             attack_time = random_time.strftime('%Y-%m-%dT%H:%M:%S.%f')
             attack_time = attack_time[:-3]
 
-            c.execute("INSERT INTO data (parametr4, parametr3, parametr1, parametr2, parametr5,parametr6) VALUES (?, ?, ?, ?, ?,?)",
-                      (type, attack_time, from_village, target, url,"1"))  # dodajemy url do zapytania SQL
+            c.execute("INSERT INTO data (parametr4, parametr3, parametr1, parametr2, parametr5,parametr6, parametr7) VALUES (?, ?, ?, ?, ?,?, ?)",
+                      (type, attack_time, from_village, target, url,"1",units2))  # dodajemy url do zapytania SQL
     conn.commit()
     conn.close()
 

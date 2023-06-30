@@ -18,10 +18,10 @@ from selenium.common.exceptions import NoSuchElementException
 
 cookies = [
 {'name' : 'remember_optout', 'value' : '0'},
-{'name' : 'pl_auth', 'value' : 'a4194bdb3f70:21e4b391789d0cbc408cbc7f7d96055352862a68d633c67fb042fb0be8104d6e'},
-{'name' : 'PHPSESSID', 'value' : 'n92foeajau1a52njm8ibgsaef0m1hqdp00099icmc4130dqv'},
+{'name' : 'pl_auth', 'value' : '2dee5376d757:d0481ba0662938a2e1fbd76ea89cfc314c260c304a2e174803adfae0ed79a7e4'},
+{'name' : 'PHPSESSID', 'value' : 's8ra163p66p1l5vntenif0bkvh6odtve4fvdbe8j8oidud7g'},
 {'name' : 'ref', 'value' : 'start'},
-{'name' : 'cid', 'value' : '1486828514'}]
+{'name' : 'cid', 'value' : '1448238912'}]
 
 
 def wait_until(hour, minute, second):
@@ -126,9 +126,46 @@ def fake_units(units2, capacity):
                           units[unit] > 0}  # Update the probabilities
             unit_list = list(unit_probs.keys())  # Update the unit list
     return attack_units
+def grubas_units(posiadane, limit):
+    unit_size = {'spear': 1, 'sword': 1, 'axe': 1, 'archer': 1, 'spy': 2, 'light': 4,'marcher': 5, 'heavy': 6, 'ram': 5, 'catapult': 8, 'snob': 100}
+    unit_order = [['axe', 'light', 'ram', 'marcher'], ['heavy'], ['spear', 'sword', 'archer']]
+
+    if 'snob' in posiadane and posiadane['snob'] > 0:
+        units_chosen = {'snob': 1}
+        posiadane['snob'] -= 1
+        total_units = sum(posiadane[unit]*unit_size[unit] for unit in posiadane)
+        limit -= unit_size['snob']
+    else:
+        raise ValueError("Brak jednostki 'snob' do dodania do ataku.")
+
+    if total_units < 0.5*limit:
+        return False, "Dostępne jednostki stanowią mniej niż 50% limitu.", 0, "Brak"
+
+    for unit_group in unit_order:
+        group_units = sum(posiadane.get(unit, 0)*unit_size[unit] for unit in unit_group)
+        if group_units <= 0.7*limit:
+            for unit in unit_group:
+                if unit in posiadane and posiadane[unit] > 0:
+                    units_chosen[unit] = posiadane[unit]
+                    limit -= posiadane[unit]*unit_size[unit]
+        else:
+            group_sum = sum(posiadane.get(unit, 0) for unit in unit_group if unit in posiadane)
+            for unit in unit_group:
+                if unit in posiadane and posiadane[unit] > 0 and limit > 0:
+                    if group_sum > 0:
+                        units_to_take = min(limit // unit_size[unit], int(posiadane[unit] * (posiadane[unit] / group_sum)))
+                    else:
+                        units_to_take = min(limit // unit_size[unit], posiadane[unit])
+                    units_chosen[unit] = units_to_take
+                    limit -= units_to_take * unit_size[unit]
+
+    if sum(units_chosen[unit]*unit_size[unit] for unit in units_chosen) < 0.7*limit:
+        raise ValueError("Dostępne jednostki stanowią mniej niż 70% limitu.")
+
+    return units_chosen
 
 
-# WYBÓR JEDNOSTEK DLA BURZAKÓW
+
 def burzak_units(driver, number):
     units_dict = {
         "axe": "units_entry_all_axe",
@@ -236,7 +273,7 @@ def enter_units(driver, units):
             print(f'Nie mogę znaleźć pola dla jednostki: {unit}')
 
 
-def send_attack(id_record, parametr1, parametr2, attacktype, url, massorsingle, data):
+def send_attack(id_record, parametr1, parametr2, attacktype, url, massorsingle, data, units_to_send):
     try:
         print("[LAUNCHING AN ATTACK]: ID:", id_record, "A: ", parametr1, "B: ", parametr2, "C: ", attacktype, "D: ",
               url, "E: ", massorsingle)
@@ -245,8 +282,8 @@ def send_attack(id_record, parametr1, parametr2, attacktype, url, massorsingle, 
         options.add_argument("--start-minimized")
         options.add_argument(
             "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537")
-        options.add_argument('--headless')
-        options.add_argument('--no-sandbox')
+        #options.add_argument('--headless')
+        #options.add_argument('--no-sandbox')
         driver = webdriver.Chrome(options=options)
 
         dt = datetime.strptime(data, '%Y-%m-%dT%H:%M:%S.%f')
@@ -313,7 +350,6 @@ def send_attack(id_record, parametr1, parametr2, attacktype, url, massorsingle, 
                 driver.add_cookie(cookie)
             print("[AFTER COOKIES]")
             driver.refresh()
-
             try:
                 challenge_container = driver.find_element(By.CLASS_NAME, "challenge-container")
                 return False, "E.01 - Znaleziono captcha", 0, "Brak"
@@ -323,10 +359,9 @@ def send_attack(id_record, parametr1, parametr2, attacktype, url, massorsingle, 
             try:
                 iframe = driver.find_element(By.XPATH, "//iframe[@title='Main content of the hCaptcha challenge']")
                 return False, "E.02 - Znaleziono captcha", 0, "Brak"
-            except Exception as e:
+            except:
                 pass
 
-            driver.implicitly_wait(1)  # sekundy
             try:
                 logout_link = driver.find_element(By.XPATH, "//a[@href='/page/logout']")
             except:
@@ -336,6 +371,7 @@ def send_attack(id_record, parametr1, parametr2, attacktype, url, massorsingle, 
                 challenge_container = driver.find_element(By.XPATH, "//span[text()='Świat 182']")
 
                 challenge_container.click()
+
             except:
                 return False, "E.04 - Nie znaleziono swiata 182", 0, "Brak"
 
@@ -350,10 +386,9 @@ def send_attack(id_record, parametr1, parametr2, attacktype, url, massorsingle, 
                     EC.presence_of_element_located((By.XPATH, '//a[contains(text(), "Kombinowany ")]'))
                 )
                 element.click()
-            except Exception as e:
+
+            except:
                 pass
-            finally:
-                driver.quit()
 
             try:
                 element = driver.find_element(By.CLASS_NAME, "group-menu-item")
@@ -382,6 +417,7 @@ def send_attack(id_record, parametr1, parametr2, attacktype, url, massorsingle, 
                     return False, "E.07 - Nie znaleziono wioski atakującego o podanych koordynatach", 0, "Brak"
             except:
                 return False, "E.07 - Błąd pobierania id wiosek", 0, "Brak"
+            print("test6")
 
         if attacktype == "OFF":
             try:
@@ -467,9 +503,15 @@ def send_attack(id_record, parametr1, parametr2, attacktype, url, massorsingle, 
 
         elif attacktype == "SZLACHCIC":
             try:
+                units = collect_and_assign_units(driver)
+                attack_units = grubas_units(units, units_to_send)
+                enter_units(driver, attack_units)
+                print("GRUBAS UNITS:", attack_units)
+                size = calculate_total(attack_units)
+            except Exception as e:
+                print(e)
                 return False, "E.15 - SZLACHCIC", 0, "Brak"
-            except:
-                pass
+
 
         try:
             element = WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.ID, "target_attack")))
@@ -575,12 +617,14 @@ def scripto():
             url = row[5]
             massorsingle = row[6]
             data = date_str
+            units_to_send = row[7]
+            units_to_send = int(units_to_send)
 
             if timedelta(minutes=0) < time_diff <= timedelta(minutes=1):  # Sprawdź, czy do daty brakuje 1 minut
                 if len(rows) == 1:
                     znaleziono_date = True
                 is_successful, message, attack_units, size = send_attack(id_record, parametr1, parametr2, attacktype,
-                                                                         url, massorsingle, data)
+                                                                         url, massorsingle, data, units_to_send)
 
                 if is_successful:
                     print("Wysłano atak pomyślnie!")

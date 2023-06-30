@@ -42,6 +42,7 @@
             <th class="border border-gray-600 py-2 px-4">Attacker's Cords (XXX|YYY)</th>
             <th class="border border-gray-600 py-2 px-4">Enemy Cords (XXX|YYY)</th>
             <th class="border border-gray-600 py-2 px-4">massorsingle</th>
+            <th class="border border-gray-600 py-2 px-4">units</th>
             <th class="border border-gray-600 py-2 px-4">Date</th>
             <th class="border border-gray-600 py-2 px-4">Action</th>
         </tr>
@@ -61,6 +62,8 @@
             <td class="border border-gray-600 py-2  px-4">{{ rekord[1] }}</td>
             <td class="border border-gray-600 py-2 px-4" >{{ rekord[2] }}</td>
             <td class="border border-gray-600 py-2 px-4">{{ rekord[6] }}</td>
+            <td class="border border-gray-600 py-2 px-4">{{ rekord[7] }}</td>
+
             <td class="border border-gray-600 py-2 px-4">{{ rekord[3] }}</td>
             <td class="border border-gray-600 py-2 px-4">
                 <form class="edit-form inline-block" action="{{ url_for('edytuj', id=rekord[0]) }}" method="GET">
