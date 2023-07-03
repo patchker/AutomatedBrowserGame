@@ -1049,6 +1049,26 @@ def uruchom_moj_skrypt():
     else:
         return f"Błąd: {message}"
 
+@app.route('/test_attack', methods=['POST'])
+
+def test_attack():
+    now = datetime.now()
+
+    # Dodanie jednej minuty do aktualnej daty i czasu
+    future = now + timedelta(minutes=1)
+
+    # Wypisanie daty i czasu w wymaganym formacie
+    formatted = future.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
+    print(formatted)
+
+    is_successful, message, attack_units, size = scripto.send_attack(999, "562|656", "471|593", "SZLACHCIC",
+                                                             "", 0, formatted, 13000)
+
+    if is_successful:
+        return message
+    else:
+        return f"Błąd: {message}"
+
 
 if __name__ == '__main__':
     CORS(app)

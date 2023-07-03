@@ -18,10 +18,10 @@ from selenium.common.exceptions import NoSuchElementException
 
 cookies = [
 {'name' : 'remember_optout', 'value' : '0'},
-{'name' : 'pl_auth', 'value' : '2dee5376d757:d0481ba0662938a2e1fbd76ea89cfc314c260c304a2e174803adfae0ed79a7e4'},
-{'name' : 'PHPSESSID', 'value' : 's8ra163p66p1l5vntenif0bkvh6odtve4fvdbe8j8oidud7g'},
+{'name' : 'pl_auth', 'value' : '670f46986652:810c2d8af3b0a9f18c9548d49b199d763958f4c9194c64e6b381f8f5264d94a2'},
+{'name' : 'PHPSESSID', 'value' : '40uep65ama0r25n625g47f7rah9bqfp2g9nb0t3lv7bqv1if'},
 {'name' : 'ref', 'value' : 'start'},
-{'name' : 'cid', 'value' : '1448238912'}]
+{'name' : 'cid', 'value' : '410559565'}]
 
 
 def wait_until(hour, minute, second):
@@ -127,42 +127,39 @@ def fake_units(units2, capacity):
             unit_list = list(unit_probs.keys())  # Update the unit list
     return attack_units
 def grubas_units(posiadane, limit):
-    unit_size = {'spear': 1, 'sword': 1, 'axe': 1, 'archer': 1, 'spy': 2, 'light': 4,'marcher': 5, 'heavy': 6, 'ram': 5, 'catapult': 8, 'snob': 100}
+    unit_size = {'spear': 1, 'sword': 1, 'axe': 1, 'archer': 1, 'spy': 2, 'light': 4, 'marcher': 5, 'heavy': 6, 'ram': 5, 'catapult': 8, 'snob': 100}
     unit_order = [['axe', 'light', 'ram', 'marcher'], ['heavy'], ['spear', 'sword', 'archer']]
 
     if 'snob' in posiadane and posiadane['snob'] > 0:
         units_chosen = {'snob': 1}
         posiadane['snob'] -= 1
-        total_units = sum(posiadane[unit]*unit_size[unit] for unit in posiadane)
         limit -= unit_size['snob']
     else:
         raise ValueError("Brak jednostki 'snob' do dodania do ataku.")
 
+    total_units = sum(posiadane[unit]*unit_size[unit] for unit in posiadane)
     if total_units < 0.5*limit:
         return False, "Dostępne jednostki stanowią mniej niż 50% limitu.", 0, "Brak"
 
     for unit_group in unit_order:
         group_units = sum(posiadane.get(unit, 0)*unit_size[unit] for unit in unit_group)
-        if group_units <= 0.7*limit:
+        while group_units > 0 and limit > 0:
+            units_taken_in_this_round = 0
             for unit in unit_group:
-                if unit in posiadane and posiadane[unit] > 0:
-                    units_chosen[unit] = posiadane[unit]
-                    limit -= posiadane[unit]*unit_size[unit]
-        else:
-            group_sum = sum(posiadane.get(unit, 0) for unit in unit_group if unit in posiadane)
-            for unit in unit_group:
-                if unit in posiadane and posiadane[unit] > 0 and limit > 0:
-                    if group_sum > 0:
-                        units_to_take = min(limit // unit_size[unit], int(posiadane[unit] * (posiadane[unit] / group_sum)))
-                    else:
-                        units_to_take = min(limit // unit_size[unit], posiadane[unit])
+                if unit in posiadane and posiadane[unit] > 0 and limit >= unit_size[unit]: # Ensure there's room for at least one unit of this type
+                    group_ratio = posiadane[unit]*unit_size[unit] / group_units if group_units > 0 else 0
+                    units_to_take = min(limit // unit_size[unit], int(group_ratio * limit // unit_size[unit]))
                     units_chosen[unit] = units_to_take
                     limit -= units_to_take * unit_size[unit]
-
-    if sum(units_chosen[unit]*unit_size[unit] for unit in units_chosen) < 0.7*limit:
-        raise ValueError("Dostępne jednostki stanowią mniej niż 70% limitu.")
+                    group_units -= units_to_take * unit_size[unit] # Update group_units to reflect taken units
+                    posiadane[unit] -= units_to_take  # Update posiadane to reflect taken units
+                    units_taken_in_this_round += units_to_take
+            if limit <= 0 or units_taken_in_this_round == 0:
+                break  # stop if limit is reached or no units can be taken in this round
 
     return units_chosen
+
+
 
 
 
@@ -504,10 +501,15 @@ def send_attack(id_record, parametr1, parametr2, attacktype, url, massorsingle, 
         elif attacktype == "SZLACHCIC":
             try:
                 units = collect_and_assign_units(driver)
+                size = calculate_total(units)
+                print("Posiadane: ", units, "(", size, ")")
+
                 attack_units = grubas_units(units, units_to_send)
                 enter_units(driver, attack_units)
-                print("GRUBAS UNITS:", attack_units)
                 size = calculate_total(attack_units)
+
+                print("GRUBAS UNITS:", attack_units, "(", size, ")")
+
             except Exception as e:
                 print(e)
                 return False, "E.15 - SZLACHCIC", 0, "Brak"

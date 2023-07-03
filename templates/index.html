@@ -72,6 +72,10 @@ document.getElementById('toggleSwitch').addEventListener('change', function() {
         <input id="debug-button" type="submit" value="DEBUG" class="w-64 h-16 bg-red-500 hover:bg-red-400 text-white rounded text-2xl cursor-pointer transition-colors duration-300">
     </form>
 
+    <form class="home mt-20 text-center" action="/test_attack" method="POST">
+        <input id="test-button" type="submit" value="TEST ATTACK" class="w-64 h-16 bg-red-500 hover:bg-red-400 text-white rounded text-2xl cursor-pointer transition-colors duration-300">
+    </form>
+
 <script>
 $(document).ready(function(){
   function updateData() {
