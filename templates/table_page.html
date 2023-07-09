@@ -12,6 +12,8 @@
                 <th class="border-0 py-2 px-10">massorsingle</th>
                 <th class="border-0 py-2 px-10">units</th>
 
+
+
             </thead>
             {% for attack in table_data %}
             <tr class="text-white hover:bg-gray-700 transition-colors duration-200">
@@ -22,6 +24,7 @@
                 <td class="border border-gray-600 py-2  px-10">{{ attack['target'] }}</td>
                 <td class="border border-gray-600 py-2  px-10">{{ attack['massorsingle'] }}</td>
                 <td class="border border-gray-600 py-2  px-10">{{ attack['units'] }}</td>
+
 
             </tr>
             {% endfor %}

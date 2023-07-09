@@ -55,7 +55,7 @@ def slow_type(element, text, delay=0.05):
 
 
 # pobieranie ilości aktualnych wojsk
-def collect_and_assign_units(driver):
+def collect_and_assign_units(html_content):
     units_dict = {
         "spear": "units_entry_all_spear",
         "sword": "units_entry_all_sword",
@@ -70,11 +70,14 @@ def collect_and_assign_units(driver):
         "snob": "units_entry_all_snob"
     }
 
+    soup = BeautifulSoup(html_content, 'html.parser')
     units = {}
     for unit, id in units_dict.items():
-        text = driver.find_element(By.ID, id).text
-        text = text[1:-1]  # usuń nawiasy
-        units[unit] = int(text)
+        element = soup.find(id=id)
+        if element is not None:
+            text = element.text
+            text = text[1:-1]  # usuń nawiasy
+            units[unit] = int(text)
     return units
 
 

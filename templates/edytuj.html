@@ -49,6 +49,15 @@
                 <label for="parametr3" class="mb-2">Date:</label>
                 <input type="datetime-local" name="parametr3" id="parametr3" step="0.001" value="{{ rekord[3] }}" class="px-2 py-1 border rounded bg-neutral-600 text-white">
             </div>
+            <div class="flex flex-col mb-4">
+                <label for="parametr8" class="mb-2">Source ID</label>
+                <input type="text" name="parametr8" id="parametr8" value="{{ rekord[8] }}" class="px-2 py-1 border rounded bg-neutral-600 text-white">
+            </div>
+
+            <div class="flex flex-col mb-4">
+                <label for="parametr9" class="mb-2">Target ID</label>
+                <input type="text" name="parametr9" id="parametr9" value="{{ rekord[9] }}" class="px-2 py-1 border rounded bg-neutral-600 text-white">
+            </div>
             <input type="submit" value="Save" class="px-4 py-2 rounded bg-blue-500 text-white hover:bg-blue-600">
         </form>
         <form action="{{ url_for('lista') }}">

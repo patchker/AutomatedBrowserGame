@@ -1,7 +1,40 @@
 {% include 'top.html' %}
+<div class="flex flex-col items-center justify-center py-6">
+    <h1 class="text-white text-4xl mb-4">Scheduled Attacks</h1>
+    <div class="grid grid-cols-6 gap-4 text-center">
+        <div class="bg-blue-500 p-4 rounded-lg shadow flex flex-col">
+            <div class="text-white text-2xl">{{ rekordy|length }}</div>
+            <p class="text-blue-700">Total</p>
+        </div>
+        <div class="bg-blue-500 p-4 rounded-lg shadow flex flex-col">
+            <div class="text-white text-2xl">{{ licznik_typow_atakow['FAKE'] }}</div>
+            <p class="text-blue-700">Fake</p>
+        </div>
+        <div class="bg-blue-500 p-4 rounded-lg shadow flex flex-col">
+            <div class="text-white text-2xl">{{ licznik_typow_atakow['OFF'] }}</div>
+            <p class="text-blue-700">Off</p>
+        </div>
+        <div class="bg-blue-500 p-4 rounded-lg shadow flex flex-col">
+            <div class="text-white text-2xl">{{ licznik_typow_atakow['BURZAK'] }}</div>
+            <p class="text-blue-700">Burzak</p>
+        </div>
+        <div class="bg-blue-500 p-4 rounded-lg shadow flex flex-col">
+            <div class="text-white text-2xl">{{ licznik_typow_atakow['FAKE SZLACHCIC'] }}</div>
+            <p class="text-blue-700">Fake Szlachcic</p>
+        </div>
+        <div class="bg-blue-500 p-4 rounded-lg shadow flex flex-col">
+            <div class="text-white text-2xl">{{ licznik_typow_atakow['SZLACHCIC'] }}</div>
+            <p class="text-blue-700">Szlachcic</p>
+        </div>
+    </div>
+</div>
+
+
+
+
+
 
         <section>
-        <h1 class="text-blue-400 text-3xl py-4">SCHEDULED ATTACKS ({{ rekordy|length }}), FAKE: ({{ licznik_typow_atakow['FAKE'] }}), OFF: ({{ licznik_typow_atakow['OFF'] }}) BURZAK: ({{ licznik_typow_atakow['BURZAK'] }}) FS: ({{ licznik_typow_atakow['FAKE SZLACHCIC'] }}) SZLACHCIC: ({{ licznik_typow_atakow['SZLACHCIC'] }}) </h1>
 
 
 <div class="relative inline-block w-64">
@@ -44,7 +77,13 @@
             <th class="border border-gray-600 py-2 px-4">massorsingle</th>
             <th class="border border-gray-600 py-2 px-4">units</th>
             <th class="border border-gray-600 py-2 px-4">Date</th>
+            <th class="border border-gray-600 py-2 px-4">Source ID</th>
+            <th class="border border-gray-600 py-2 px-4">Target ID</th>
+
+            
+            <th class="border border-gray-600 py-2 px-4">Start</th>
             <th class="border border-gray-600 py-2 px-4">Action</th>
+
         </tr>
     </thead>
     <tbody>
@@ -65,6 +104,22 @@
             <td class="border border-gray-600 py-2 px-4">{{ rekord[7] }}</td>
 
             <td class="border border-gray-600 py-2 px-4">{{ rekord[3] }}</td>
+            <td class="border border-gray-600 py-2 px-4">{{ rekord[8] }}</td>
+            <td class="border border-gray-600 py-2 px-4">{{ rekord[9] }}</td>
+            <td class="border border-gray-600 py-2 px-4 d-flex justify-content-center align-items-center" style="position: relative;">
+                <div id="loader-container" style="position: absolute; top: 0; bottom: 0; left: 0; right: 0; display: flex; justify-content: center; align-items: center;">
+                    <img id="loader" src="../static/images/loader.gif" width="20px" style="display: none;">
+                </div>
+                <span id="results"></span>
+                <form class="start-form inline-block" action="{{ url_for('elo', id1=rekord[8],  id2=rekord[9], target_coords = rekord[2], attacktype=rekord[4])}}" method="GET">
+                    <input id="start" class="border-2 btn-blue border-blue-500 hover:bg-blue-500 text-blue-500 hover:text-white font-bold py-2 px-4 rounded-2xl transition-all duration-100 ease-in-out transform hover:-translate-y-1 hover:scale-105 active:scale-90 shadow-lg cursor-pointer" type="submit" value="Start">
+                </form>
+            </td>
+            
+            
+            
+                           
+                            
             <td class="border border-gray-600 py-2 px-4">
                 <form class="edit-form inline-block" action="{{ url_for('edytuj', id=rekord[0]) }}" method="GET">
 <input class="border-2 btn-blue border-blue-500 hover:bg-blue-500 text-blue-500 hover:text-white font-bold py-2 px-4 rounded-2xl transition-all duration-100 ease-in-out transform hover:-translate-y-1 hover:scale-105 active:scale-90 shadow-lg cursor-pointer" type="submit" value="Edit">
@@ -124,6 +179,32 @@ $(document).ready(function(){
         }
     }
 });
+</script>
+<script>
+$(document).ready(function(){
+    $(".start-form").off('submit').on('submit', function(e){
+        e.preventDefault();  // prevent the form from 'submitting'
+        let actionUrl = e.target.action;  // Get the form action url
+        $("#loader").css("display", "block");  // Show the loader
+        $(this).hide(); // Hide only the form that was submitted
+        $.get(actionUrl, function(data, status){
+            $("#loader").css("display", "none");  // Hide the loader
+            var resultImage = data.success ? "../static/images/success.png" : "../static/images/failure.png";
+            var newRow = '<tr><td><img class="result-image" src="' + resultImage + '" width="20px"></td></tr>';
+            $("#results").append(newRow);
+            $(".result-image").show();
+        }).fail(function() {
+            // handle request failures
+            $("#loader").css("display", "none");  // Hide the loader
+            var resultImage = "../static/images/failure.png";
+            var newRow = '<tr><td><img class="result-image" src="' + resultImage + '" width="20px"></td></tr>';
+            $("#results").append(newRow);
+            $(".result-image").show();
+        });
+    });
+});
+
+
 </script>
 
 {% include 'bottom.html' %}

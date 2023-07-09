@@ -18,6 +18,25 @@ import math
 import scripto
 import os
 import signal
+from urllib.parse import urlparse, parse_qs
+import json
+import re
+import sqlite3
+import time
+from datetime import datetime, timedelta
+import numpy as np
+import requests
+from bs4 import BeautifulSoup
+from dateutil.parser import parse
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.support.wait import WebDriverWait
+import app
+from selenium.common.exceptions import NoSuchElementException
+
 
 print("""
               _       _     _               _              
@@ -35,7 +54,7 @@ def init_db():
     conn = sqlite3.connect('data.db')
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS data
-(id INTEGER PRIMARY KEY AUTOINCREMENT, parametr1 TEXT, parametr2 TEXT, parametr3 TEXT, parametr4 TEXT, parametr5 TEXT, parametr6 TEXT, parametr7 TEXT )''')
+(id INTEGER PRIMARY KEY AUTOINCREMENT, parametr1 TEXT, parametr2 TEXT, parametr3 TEXT, parametr4 TEXT, parametr5 TEXT, parametr6 TEXT, parametr7 TEXT, parametr8 TEXT, parametr9 TEXT )''')
     # Dodaj na początku kodu, np. po otwarciu połączenia z bazą danych
     c.execute('''
         CREATE TABLE IF NOT EXISTS wyslane (
@@ -515,7 +534,12 @@ def home():
         global is_stopping
         is_stopping = False
         print("[STARTED]")
-        wynik = uruchom_moj_skrypt()
+        conn = sqlite3.connect('data.db')
+        c = conn.cursor()
+        c.execute("UPDATE server_status SET status = 'active' WHERE id = 1")
+        conn.commit()
+        conn.close()
+        wynik = scripto()
 
         return render_template('wynik.html', wynik=wynik)
 
@@ -795,6 +819,9 @@ def edytuj(id):
         parametr2 = request.form.get('parametr2')
         parametr3 = request.form.get('parametr3')
         parametr4 = request.form.get('parametr4')
+        parametr8 = request.form.get('parametr8')
+        parametr9 = request.form.get('parametr9')
+
 
         # Sprawdzenie i poprawienie wartości parametr3
         try:
@@ -817,8 +844,8 @@ def edytuj(id):
             miliseconds += '0'
         parametr3 = dt.strftime("%Y-%m-%dT%H:%M:%S.") + miliseconds
 
-        c.execute("UPDATE data SET parametr1=?, parametr2=?, parametr3=?, parametr4=? WHERE id=?",
-                  (parametr1, parametr2, parametr3, parametr4, id))
+        c.execute("UPDATE data SET parametr1=?, parametr2=?, parametr3=?, parametr4=?, parametr8=?, parametr9=? WHERE id=?",
+                  (parametr1, parametr2, parametr3, parametr4, parametr8, parametr9, id))
         conn.commit()
         conn.close()
         return redirect(url_for('lista'))
@@ -837,6 +864,9 @@ def zapisz():
     parametr4 = request.form.get('parametr4')
     parametr5 = request.form.get('parametr5')
     parametr7 = request.form.get('parametr7')
+    parametr8 = request.form.get('parametr8')
+    parametr9 = request.form.get('parametr9')
+
 
 
     # Sprawdzenie i poprawienie wartości parametr3
@@ -862,8 +892,8 @@ def zapisz():
 
     conn = sqlite3.connect("data.db")
     c = conn.cursor()
-    c.execute("INSERT INTO data (parametr1, parametr2, parametr3, parametr4, parametr5, parametr6,parametr7) VALUES (?, ?, ?,?,?,?,?)",
-              (parametr1, parametr2, parametr3, parametr4, parametr5, "0", parametr7))
+    c.execute("INSERT INTO data (parametr1, parametr2, parametr3, parametr4, parametr5, parametr6,parametr7,parametr8, parametr9) VALUES (?, ?, ?,?,?,?,?,?,?)",
+              (parametr1, parametr2, parametr3, parametr4, parametr5, "0", parametr7, parametr8, parametr9))
     conn.commit()
     conn.close()
 
@@ -929,8 +959,6 @@ def process_text():
                             attack['units'] = int(units.group(1))
 
 
-
-
             date_time = re.search(
                 r'\[\|\](\d{4}-\d{2}-\d{2})\s*\[b\]\[color=#\w{6}\](\d{2}:\d{2}:\d{2})\[/color\]\[/b\]-\[b\]\[color=#\w{6}\](\d{2}:\d{2}:\d{2})\[/color\]\[/b\]',
                 line)
@@ -951,35 +979,7 @@ def process_text():
 
     return render_template('table_page.html', table_data=attacks)
 
-@app.route('/add_to_db2', methods=['POST'])
-def add_to_db2():
-    types = request.form.getlist('type')
-    dates = request.form.getlist('date')
-    from_villages = request.form.getlist('from_village')
-    targets = request.form.getlist('target')
-    urls = request.form.getlist('url')
-    massorsingle = request.form.getlist('massorsingle')
-    units = request.form.getlist('units')
 
-
-    conn = sqlite3.connect("data.db")
-    c = conn.cursor()
-    for i in range(len(types)):
-        type = types[i]
-        date = dates[i]
-        from_village = from_villages[i]
-        target = targets[i]
-        url = urls[i]  # przypisujemy url
-        massorsingle2 = massorsingle[i]  # przypisujemy url
-        units2=units[i]
-        print(units2)
-
-        c.execute("INSERT INTO data (parametr4, parametr3, parametr1, parametr2, parametr5,parametr6) VALUES (?, ?, ?, ?, ?,?)",(type, date, from_village, target, url, massorsingle2))  # dodajemy url do zapytania SQL
-    conn.commit()
-    conn.close()
-
-
-    return redirect(url_for('lista'))
 @app.route('/add_to_db', methods=['POST'])
 def add_to_db():
     types = request.form.getlist('type')
@@ -1026,48 +1026,493 @@ def add_to_db():
             attack_time = random_time.strftime('%Y-%m-%dT%H:%M:%S.%f')
             attack_time = attack_time[:-3]
 
-            c.execute("INSERT INTO data (parametr4, parametr3, parametr1, parametr2, parametr5,parametr6, parametr7) VALUES (?, ?, ?, ?, ?,?, ?)",
-                      (type, attack_time, from_village, target, url,"1",units2))  # dodajemy url do zapytania SQL
+            parsed_url = urlparse(url)
+            query_params = parse_qs(parsed_url.query)
+            source_village = query_params.get('village', [''])[0]
+            target_village = query_params.get('target', [''])[0]
+
+            c.execute("INSERT INTO data (parametr4, parametr3, parametr1, parametr2, parametr5,parametr6, parametr7,parametr8, parametr9) VALUES (?, ?, ?, ?, ?,?, ?, ?, ?)",
+                      (type, attack_time, from_village, target, url,"1",units2, source_village, target_village))  # dodajemy url do zapytania SQL
     conn.commit()
     conn.close()
-
     return redirect(url_for('lista'))
 
 
 
+def scripto():
+    znaleziono_date = False
+    while not znaleziono_date:
 
-def uruchom_moj_skrypt():
-    conn = sqlite3.connect('data.db')
-    c = conn.cursor()
-    c.execute("UPDATE server_status SET status = 'active' WHERE id = 1")
-    conn.commit()
-    conn.close()
-    is_successful, message = scripto.scripto()
+        # sprawdzanie stanu serwera
+        conn = sqlite3.connect('data.db')
+        c = conn.cursor()
+        c.execute('SELECT status FROM server_status')
+        server_status = c.fetchone()
+        if server_status[0] == 'inactive':
+            print("Serwer został zatrzymany.")
+            break
+        conn.close()
 
-    if is_successful:
-        return message
+        conn = sqlite3.connect('data.db')
+        c = conn.cursor()
+        c.execute('SELECT * FROM data')
+        rows = c.fetchall()
+
+        for row in rows:
+            date_str = row[3]
+            date_obj = parse(date_str)
+            now = datetime.now()
+            time_diff = date_obj - now
+            id_record = row[0]
+            parametr1 = row[1]
+            parametr2 = row[2]
+            attacktype = row[4]
+            url = row[5]
+            massorsingle = row[6]
+            data = date_str
+            units_to_send = row[7]
+            units_to_send = int(units_to_send)
+            id1 = row[8]
+            id2 = row[9]
+            x_str, y_str = parametr2.split("|")
+            x = int(x_str)
+            y = int(y_str)
+            koordynaty_tuple = (x, y)
+            attack_units = {
+            "spear": 150,
+            "sword": 0,
+            "axe": 0,
+            "spy": 0,
+            "light": 0,
+            "heavy": 0,
+            "ram": 0,
+            "catapult": 0,
+            "knight": 0,
+            "snob": 0,
+            }
+
+            if timedelta(minutes=0) < time_diff <= timedelta(minutes=1):  # Sprawdź, czy do daty brakuje 1 minut
+                if len(rows) == 1:
+                    znaleziono_date = True
+                attack_result = test_send(id1, koordynaty_tuple, "8670")
+                if attack_result:
+                    print("Wysłano atak pomyślnie!")
+                    conn = sqlite3.connect('data.db')
+                    c = conn.cursor()
+                    attack_units_json = json.dumps(attack_units)
+
+                    c.execute(
+                        "INSERT INTO wyslane(parametr1, parametr2, data, attacktype,size, units) VALUES (?, ?, ?, ?,?,?)",
+                        (parametr1, parametr2, data, attacktype, 6435, attack_units_json))
+                    c.execute("DELETE FROM data WHERE id = ?", (id_record,))
+
+                    conn.commit()
+                else:
+                    print("Nie udało się wysłać ataku. Powód:")
+                    conn = sqlite3.connect('data.db')
+                    c = conn.cursor()
+                    c.execute(
+                        "INSERT INTO niewyslane(parametr1, parametr2, data, attacktype, reason, url, massorsingle) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                        (parametr1, parametr2, data, attacktype, "ggfdgdf", url, massorsingle))
+                    c.execute("DELETE FROM data WHERE id = ?", (id_record,))
+                    conn.commit()
+
+        conn.close()
+        if not znaleziono_date:
+            time.sleep(10)
+
+    return True, "Zakończono działanie programu."
+
+
+
+@app.route('/cookie_string', methods=['POST'])
+def cookie_string():
+    cookies = {}
+    cookie_value = request.form.get('cookie_string')
+
+    pairs = cookie_value.split("; ")
+    for pair in pairs:
+        if '=' in pair:  # Sprawdzenie, czy ciasteczko zawiera znak =
+            key, value = pair.split("=")
+            cookies[key] = value
+        else:
+            print(f"Nieprawidłowe ciasteczko: {pair}")
+
+    # Zapisywanie do pliku
+    with open('cookies.json', 'w') as f:
+        json.dump(cookies, f)
+
+    return redirect(url_for('home'))
+
+
+def load_cookies():
+    # Wczytywanie z pliku
+    with open('cookies.json', 'r') as f:
+        cookies = json.load(f)
+
+    return cookies
+
+
+# pobieranie ilości aktualnych wojsk
+def collect_and_assign_units(html_content):
+    units_dict = {
+        "spear": "units_entry_all_spear",
+        "sword": "units_entry_all_sword",
+        "axe": "units_entry_all_axe",
+        "archer": "units_entry_all_archer",
+        "spy": "units_entry_all_spy",
+        "light": "units_entry_all_light",
+        "marcher": "units_entry_all_marcher",
+        "heavy": "units_entry_all_heavy",
+        "ram": "units_entry_all_ram",
+        "catapult": "units_entry_all_catapult",
+        "knight": "units_entry_all_knight",
+        "snob": "units_entry_all_snob"
+
+    }
+
+    soup = BeautifulSoup(html_content, 'html.parser')
+    units = {}
+    for unit, id in units_dict.items():
+        element = soup.find(id=id)
+        if element is not None:
+            text = element.text
+            text = text[1:-1]  # usuń nawiasy
+            units[unit] = int(text)
+    return units
+
+
+
+# WYBÓR JEDNOSTEK DLA FAKE
+def fake_units(units2, capacity):
+    unit_size = {'spear': 1, 'sword': 1, 'axe': 1, 'archer': 1, 'spy': 2, 'light': 4, 'heavy': 6, 'ram': 5,
+                 'catapult': 8, 'snob': 100, 'marcher': 5, 'knight': 10 }
+    units = {k: v for k, v in units2.items()}
+
+    # Wstępne ustawienie jednostek do ataku
+    attack_units = {unit: 0 for unit in units}  # Initialize all units to 0
+
+
+    # Wybór taranów lub katapult jako pierwszych, jeżeli są dostępne
+    if units.get('ram', 0) > 0 and capacity >= unit_size['ram']:
+        attack_units['ram'] = 1
+        capacity -= unit_size['ram']
+        units['ram'] -= 1
+        if 'catapult' in units:
+            units.pop('catapult', None)  # Usunięcie katapult z listy, jeżeli wybrano już taran
+    elif units.get('catapult', 0) > 0 and capacity >= unit_size['catapult']:
+        attack_units['catapult'] = 1
+        capacity -= unit_size['catapult']
+        units.pop('catapult', None)  # Usunięcie katapult z listy, aby nie były dodawane ponownie
+
+    if units.get('spy', 0) > 0 and capacity >= unit_size['spy']:
+        attack_units['spy'] = 1
+        capacity -= unit_size['spy']
+        units['spy'] -= 1
+
+    total_units = sum(units.values())
+    unit_probs = {unit: units[unit] / total_units for unit in units}
+    unit_list = list(units.keys())
+
+    while capacity > 0 and total_units > 0:
+        unit = np.random.choice(unit_list, p=[unit_probs[u] for u in unit_list])
+        if units[unit] > 0 and capacity >= unit_size[unit]:
+            if unit in attack_units:
+                attack_units[unit] += 1
+            else:
+                attack_units[unit] = 1
+            capacity -= unit_size[unit]
+            units[unit] -= 1
+            total_units -= 1
+
+            if units[unit] == 0:
+                units.pop(unit, None)
+
+            unit_probs = {unit: units[unit] / total_units for unit in units if
+                          units[unit] > 0}  # Update the probabilities
+            unit_list = list(unit_probs.keys())  # Update the unit list
+    return attack_units
+
+
+
+def burzak_units(units, number):
+    units_chosen = {unit: 0 for unit in units}  # Initialize all units to 0
+    if units['heavy'] > 50:
+        units_chosen['heavy'] = 50
+    elif units['axe'] > 100:
+        units_chosen['axe'] = 50
+    elif units['light'] > 100:
+        units_chosen['light'] = 50
+    elif units['spear'] > 100:
+        units_chosen['spear'] = 50
+    
+    units_chosen['catapult'] = number
+    return units_chosen
+
+
+# WYBÓR JEDNOSTEK DLA OFFOW
+def off_units(units):
+    units_chosen = {unit: 0 for unit in units}  # Initialize all units to 0
+    if units['ram'] < 21:
+        units_chosen['ram'] = 0
     else:
-        return f"Błąd: {message}"
+        units_chosen['ram'] = units['ram'] - 20
 
-@app.route('/test_attack', methods=['POST'])
-
-def test_attack():
-    now = datetime.now()
-
-    # Dodanie jednej minuty do aktualnej daty i czasu
-    future = now + timedelta(minutes=1)
-
-    # Wypisanie daty i czasu w wymaganym formacie
-    formatted = future.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
-    print(formatted)
-
-    is_successful, message, attack_units, size = scripto.send_attack(999, "562|656", "471|593", "SZLACHCIC",
-                                                             "", 0, formatted, 13000)
-
-    if is_successful:
-        return message
+    if units['spy'] < 10:
+        units_chosen['spy'] = 0
     else:
-        return f"Błąd: {message}"
+        units_chosen['spy'] = 10
+
+    units_chosen['axe'] = units['axe'] - 300
+    units_chosen['light'] = units['light'] - 150
+    units_chosen['spy'] = 10
+    units_chosen['marcher'] = units['marcher']
+    return units_chosen
+
+
+# WYBÓR JEDNOSTEK DLA FAKE GRUBASA
+def fake_grubas_units(units):
+    units_chosen = {unit: 0 for unit in units}  # Initialize all units to 0
+
+    if units['heavy'] > 50:
+        units_chosen['heavy'] = 25
+    elif units['axe'] > 100:
+        units_chosen['axe'] = 50
+    elif units['light'] > 25:
+        units_chosen['light'] = 25
+    elif units['spear'] > 100:
+        units_chosen['spear'] = 50
+
+    units_chosen['snob'] = 1
+    return units_chosen
+
+def grubas_units(posiadane, limit):
+    unit_size = {'spear': 1, 'sword': 1, 'axe': 1, 'archer': 1, 'spy': 2, 'light': 4, 'marcher': 5, 'heavy': 6, 'ram': 5, 'catapult': 8, 'snob': 100}
+    unit_order = [['axe', 'light', 'ram', 'marcher'], ['heavy'], ['spear', 'sword', 'archer']]
+
+    if 'snob' in posiadane and posiadane['snob'] > 0:
+        units_chosen = {'snob': 1}
+        posiadane['snob'] -= 1
+        limit -= unit_size['snob']
+    else:
+        raise ValueError("Brak jednostki 'snob' do dodania do ataku.")
+
+    total_units = sum(posiadane[unit]*unit_size[unit] for unit in posiadane)
+    if total_units < 0.5*limit:
+        return False, "Dostępne jednostki stanowią mniej niż 50% limitu.", 0, "Brak"
+
+    for unit_group in unit_order:
+        group_units = sum(posiadane.get(unit, 0)*unit_size[unit] for unit in unit_group)
+        while group_units > 0 and limit > 0:
+            units_taken_in_this_round = 0
+            for unit in unit_group:
+                if unit in posiadane and posiadane[unit] > 0 and limit >= unit_size[unit]: # Ensure there's room for at least one unit of this type
+                    group_ratio = posiadane[unit]*unit_size[unit] / group_units if group_units > 0 else 0
+                    units_to_take = min(limit // unit_size[unit], int(group_ratio * limit // unit_size[unit]))
+                    units_chosen[unit] = units_to_take
+                    limit -= units_to_take * unit_size[unit]
+                    group_units -= units_to_take * unit_size[unit] # Update group_units to reflect taken units
+                    posiadane[unit] -= units_to_take  # Update posiadane to reflect taken units
+                    units_taken_in_this_round += units_to_take
+            if limit <= 0 or units_taken_in_this_round == 0:
+                break  # stop if limit is reached or no units can be taken in this round
+
+    return units_chosen
+
+@app.route('/elo/<id1>/<id2>/<target_coords>/<attacktype>', methods=['GET'])
+def elo(id1, id2,target_coords, attacktype):
+    x_str, y_str = target_coords.split("|")
+    x = int(x_str)
+    y = int(y_str)
+    koordynaty_tuple = (x, y)
+    #attack_result = test_send(id1, koordynaty_tuple, id2 ,units)
+    #attack_result = test_send(id1, (475,573), "8670", attacktype)
+    attack_result = test_send(id1, koordynaty_tuple, id2, attacktype)
+
+    return jsonify(success=attack_result)
+
+
+def test_send(source_village, target_coords, target_id, attacktype):
+    session = requests.Session()
+
+
+    cookies = load_cookies()
+
+    print(cookies)
+
+    session.cookies.update(cookies)
+
+
+    base_url = "https://pl182.plemiona.pl/game.php?village={}&screen=place&target="+target_id
+
+    # Step 1: Zapytanie GET
+    url = base_url.format(source_village)
+    response = session.get(url)
+    if response.status_code != 200:
+        print(f"GET request failed with status code {response.status_code}")
+        return False
+    
+    soup = BeautifulSoup(response.text, 'html.parser')
+    with open("test.html", "w") as file:
+        formatted_html = soup.prettify()
+        file.write(formatted_html)
+
+    # szukaj alertu
+    pattern = re.compile(r"StartPage\.noticeBox\.show\('Twoja sesja wygasła\. Prosimy zalogować się jeszcze raz\.', 'error'\);")
+    match = pattern.search(formatted_html)
+        # sprawdź, czy alert jest wyświetlany
+    if match:
+        print('[INFO] LOGGED OUT, PLEASE ENTER NEW COOKIE STRING.')
+        return False
+    
+
+    my_units = collect_and_assign_units(response.text)
+    print(my_units)
+
+    if attacktype=="FAKE":
+        units = fake_units(my_units,110)
+    elif attacktype=="OFF":
+        units = off_units(my_units)
+    elif attacktype[:6] == "BURZAK":
+        units = burzak_units(my_units,50)
+    elif attacktype == "FAKE SZLACHCIC":
+        units = fake_grubas_units(my_units)
+    elif attacktype == "SZLACHCIC":
+        units = grubas_units(my_units)
+    else:
+        return False
+    
+    print("Units: ", units)
+
+
+
+
+
+    input_element = soup.find('input', {'name': '6890717f4d46c2ecf6952e'})
+    value = input_element['value']
+
+    print("[GET] ", url)
+
+
+
+
+    # Step 2: Pierwsze zapytanie POST
+    base_url = "https://pl182.plemiona.pl/game.php?village={}&screen=place&try=confirm"
+    url = base_url.format(source_village)
+    data = {
+        "units": value,
+        "template_id": "",
+        "source_village": source_village,
+        # Wstaw jednostki tutaj
+        "spear": units['spear'],
+        "sword": units['sword'],
+        "axe": units['axe'],
+        "archer": units['archer'],
+        "spy": units['spy'],
+        "light": units['light'],
+        "marcher": units['marcher'],
+        "heavy": units['heavy'],
+        "ram": units['ram'],
+        "catapult": units['catapult'],
+        "knight": units['knight'],
+        "snob": units['snob'],
+        "x": target_coords[0],
+        "y": target_coords[1],
+        "target_type": "coord",
+        "input": "",
+        "attack": "Aanvallen",
+        "support": "Pomoc",
+    }
+    time.sleep(1)
+    response = session.post(url, data=data)
+    print("[POST] ",url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    formatted_html = soup.prettify()
+
+
+    time.sleep(1)
+
+
+    match = re.search(r'<div class="error_box">\s*<div class="content">\s*(.*?)\s*</div>', response.text, re.DOTALL)
+    if match:
+        error_text = match.group(1)
+        print("Error text:", error_text)
+        return False
+    else:
+        print("Error text not found.")
+
+    match = re.search(r'&h=(\w+)', response.text)
+    if match:
+        h_value = match.group(1)
+        print("H value:", h_value)
+    else:
+        print("H value not found.")
+        return False
+
+
+    match = re.search(r'name="ch" value="(.+?)"', response.text)
+    if match:
+        ch_value = match.group(1)
+        print("CH value:", ch_value)
+    else:
+        print("CH value not found.")
+        return False
+
+
+    cb_value=None
+    match = re.search(r'name="cb" value="(.+?)"', response.text)
+    if match:
+        cb_value = match.group(1)
+        print("CB value:", cb_value)
+    else:
+        print("CB value not found.")
+    
+
+
+    print(f"h: {h_value}, ch: {ch_value}, cb: {cb_value}")
+
+    if response.status_code != 200:
+        print(f"POST request failed with status code {response.status_code}")
+        return False
+
+    # Step 3: Drugie zapytanie POST
+    url = "https://pl182.plemiona.pl/game.php?ajaxaction=popup_command&village={}&screen=place".format(source_village)
+    data = {
+        "attack": "true",
+        # Uzupełnij tutaj wartości ch, cb, h
+        "ch": ch_value,
+        "cb": cb_value,
+        "y": target_coords[1],
+        "source_village": source_village,
+        "village": source_village,
+        "attack_name": "",
+        "spear": units['spear'],
+        "sword": units['sword'],
+        "axe": units['axe'],
+        "archer": units['archer'],
+        "spy": units['spy'],
+        "light": units['light'],
+        "marcher": units['marcher'],
+        "heavy": units['heavy'],
+        "ram": units['ram'],
+        "catapult": units['catapult'],
+        "knight": units['knight'],
+        "snob": units['snob'],
+        "save_default_attack_building": "1",
+        "submit_confirm": "Wyślij atak",
+        "building": "main",
+        "h": h_value,
+        "x": target_coords[0],
+    }
+    time.sleep(1)
+    response = session.post(url, data=data)
+    print("[POST] ", url)
+    if response.status_code != 200:
+        print(f"POST request failed with status code {response.status_code}")
+        return False
+
+    print(f"Attack has been sent from village {source_village} to coordinates {target_coords}.")
+    return True
 
 
 if __name__ == '__main__':

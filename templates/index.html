@@ -76,6 +76,14 @@ document.getElementById('toggleSwitch').addEventListener('change', function() {
         <input id="test-button" type="submit" value="TEST ATTACK" class="w-64 h-16 bg-red-500 hover:bg-red-400 text-white rounded text-2xl cursor-pointer transition-colors duration-300">
     </form>
 
+
+    <form class="home mt-20 text-center" action="/cookie_string" method="POST">
+        <label class="text-gray-500 text-xl mb-2 block w-96 text-center mx-auto">Konfiguracja cookie string:</label>
+        <input id="cookie_string" name="cookie_string" type="text" value="" class="w-64 h-16 bg-white hover:bg-red-400 text-black rounded cursor-pointer transition-colors duration-300">
+        <input id="save-button" type="submit" value="SAVE" class="w-64 h-16 bg-red-500 hover:bg-red-400 text-white rounded text-2xl cursor-pointer transition-colors duration-300">
+    </form>
+    
+
 <script>
 $(document).ready(function(){
   function updateData() {
