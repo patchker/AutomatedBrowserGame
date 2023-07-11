@@ -1094,7 +1094,7 @@ def scripto():
             if timedelta(minutes=0) < time_diff <= timedelta(minutes=1):  # Sprawdź, czy do daty brakuje 1 minut
                 if len(rows) == 1:
                     znaleziono_date = True
-                attack_result = test_send(id1, koordynaty_tuple, "8670")
+                attack_result = test_send(id1, koordynaty_tuple, "8670", units_to_send)
                 if attack_result:
                     print("Wysłano atak pomyślnie!")
                     conn = sqlite3.connect('data.db')
@@ -1250,89 +1250,62 @@ def burzak_units(units, number):
     return units_chosen
 
 
-# WYBÓR JEDNOSTEK DLA OFFOW
-def off_units(units):
-    units_chosen = {unit: 0 for unit in units}  # Initialize all units to 0
-    if units['ram'] < 21:
-        units_chosen['ram'] = 0
-    else:
-        units_chosen['ram'] = units['ram'] - 20
-
-    if units['spy'] < 10:
-        units_chosen['spy'] = 0
-    else:
-        units_chosen['spy'] = 10
-
-    units_chosen['axe'] = units['axe'] - 300
-    units_chosen['light'] = units['light'] - 150
-    units_chosen['spy'] = 10
-    units_chosen['marcher'] = units['marcher']
-    return units_chosen
-
-
-# WYBÓR JEDNOSTEK DLA FAKE GRUBASA
-def fake_grubas_units(units):
-    units_chosen = {unit: 0 for unit in units}  # Initialize all units to 0
-
-    if units['heavy'] > 50:
-        units_chosen['heavy'] = 25
-    elif units['axe'] > 100:
-        units_chosen['axe'] = 50
-    elif units['light'] > 25:
-        units_chosen['light'] = 25
-    elif units['spear'] > 100:
-        units_chosen['spear'] = 50
-
-    units_chosen['snob'] = 1
-    return units_chosen
-
 def grubas_units(posiadane, limit):
-    unit_size = {'spear': 1, 'sword': 1, 'axe': 1, 'archer': 1, 'spy': 2, 'light': 4, 'marcher': 5, 'heavy': 6, 'ram': 5, 'catapult': 8, 'snob': 100}
+    unit_size = {'spear': 1, 'sword': 1, 'axe': 1, 'archer': 1, 'spy': 2, 'light': 4, 'marcher': 5, 'heavy': 6, 'ram': 5, 'catapult': 8, 'knight' :10, 'snob': 100}
     unit_order = [['axe', 'light', 'ram', 'marcher'], ['heavy'], ['spear', 'sword', 'archer']]
 
+    # inicjalizacja units_chosen wszystkimi jednostkami z zerowymi wartościami
+    units_chosen = {unit: 0 for unit in unit_size}
+
     if 'snob' in posiadane and posiadane['snob'] > 0:
-        units_chosen = {'snob': 1}
+        units_chosen['snob'] = 1
         posiadane['snob'] -= 1
         limit -= unit_size['snob']
     else:
-        raise ValueError("Brak jednostki 'snob' do dodania do ataku.")
+        return False, "Brak jednostki 'snob' do dodania do ataku."
 
     total_units = sum(posiadane[unit]*unit_size[unit] for unit in posiadane)
-    if total_units < 0.5*limit:
-        return False, "Dostępne jednostki stanowią mniej niż 50% limitu.", 0, "Brak"
+    if total_units < 0.7*limit: # zmieniamy na 70%
+        return False, "Dostępne jednostki stanowią mniej niż 70% limitu."
 
     for unit_group in unit_order:
-        group_units = sum(posiadane.get(unit, 0)*unit_size[unit] for unit in unit_group)
-        while group_units > 0 and limit > 0:
-            units_taken_in_this_round = 0
-            for unit in unit_group:
-                if unit in posiadane and posiadane[unit] > 0 and limit >= unit_size[unit]: # Ensure there's room for at least one unit of this type
-                    group_ratio = posiadane[unit]*unit_size[unit] / group_units if group_units > 0 else 0
-                    units_to_take = min(limit // unit_size[unit], int(group_ratio * limit // unit_size[unit]))
-                    units_chosen[unit] = units_to_take
-                    limit -= units_to_take * unit_size[unit]
-                    group_units -= units_to_take * unit_size[unit] # Update group_units to reflect taken units
-                    posiadane[unit] -= units_to_take  # Update posiadane to reflect taken units
-                    units_taken_in_this_round += units_to_take
-            if limit <= 0 or units_taken_in_this_round == 0:
-                break  # stop if limit is reached or no units can be taken in this round
-
+        group_units = [unit for unit in unit_group if unit in posiadane and posiadane[unit] > 0]  # only consider units that exist in posiadane
+        if not group_units:  # if there are no units in this group, skip
+            continue
+        while limit >= min(unit_size[unit] for unit in group_units):  # as long as there's room for the smallest unit in the group
+            for unit in sorted(group_units, key=lambda x: -unit_size[x]):  # starting from the largest
+                if limit < unit_size[unit]:  # if there's no room for this unit, go to the next one
+                    continue
+                units_to_add = min(limit // unit_size[unit], posiadane[unit])  # either as many as can fit, or as many as are available
+                units_chosen[unit] += units_to_add
+                posiadane[unit] -= units_to_add
+                limit -= units_to_add * unit_size[unit]
     return units_chosen
 
-@app.route('/elo/<id1>/<id2>/<target_coords>/<attacktype>', methods=['GET'])
-def elo(id1, id2,target_coords, attacktype):
+
+
+
+
+
+
+
+
+
+
+@app.route('/elo/<id1>/<id2>/<target_coords>/<attacktype>/<units_to_send>', methods=['GET'])
+def elo(id1, id2,target_coords, attacktype, units_to_send):
     x_str, y_str = target_coords.split("|")
     x = int(x_str)
     y = int(y_str)
     koordynaty_tuple = (x, y)
     #attack_result = test_send(id1, koordynaty_tuple, id2 ,units)
     #attack_result = test_send(id1, (475,573), "8670", attacktype)
-    attack_result = test_send(id1, koordynaty_tuple, id2, attacktype)
+    attack_result = test_send(id1, koordynaty_tuple, id2, attacktype, int(units_to_send))
 
     return jsonify(success=attack_result)
 
 
-def test_send(source_village, target_coords, target_id, attacktype):
+def test_send(source_village, target_coords, target_id, attacktype,units_to_send):
     session = requests.Session()
 
 
@@ -1378,7 +1351,7 @@ def test_send(source_village, target_coords, target_id, attacktype):
     elif attacktype == "FAKE SZLACHCIC":
         units = fake_grubas_units(my_units)
     elif attacktype == "SZLACHCIC":
-        units = grubas_units(my_units)
+        units = grubas_units(my_units,units_to_send)
     else:
         return False
     
