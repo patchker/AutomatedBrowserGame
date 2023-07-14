@@ -9,13 +9,52 @@
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://kit.fontawesome.com/bd2b98c0b7.js" crossorigin="anonymous"></script>
 
+
 </head>
-<body class="bg-neutral-900 text-white flex flex-col min-h-full font-sanfrancisco">
+<body class=" bg-gradient-to-r from-neutral-900 to-stone-900 text-white flex flex-col min-h-full font-sanfrancisco">
 <header class="px-10 flex items-center justify-between bg-neutral-800 w-full">
     <nav class="w-full">
         <ul class="flex justify-between space-x-4 w-full">
             <div class="flex space-x-4">
-                <a href="/"><h1 class=" mt-2 text-3xl text-blue-500 font-bold hover:text-blue-300 font-custom px-5 transition duration-500 ease-in-out transform hover:-translate-y-1 hover:scale-110">patchker inc.</h1></a>
+                <a href="/"><h1 class=" mt-2 text-3xl text-blue-500 font-bold hover:text-blue-300 font-custom px-5 transition duration-500 ease-in-out transform hover:-translate-y-1 hover:scale-110" id="paczker">patchker inc.</h1></a>
+
+                <style>
+
+                    #paczker {
+                      width: 100%;
+                      position: relative;
+                      text-align: center;
+                      background: #4299e1;
+                      -webkit-background-clip: text;
+                      -webkit-text-fill-color: transparent;
+                    }
+                    
+                    #paczker:after {
+                      content: "patchker inc.";
+                      position: absolute;
+                      top: 0;
+                      left: 0;
+                      width: 100%;
+                      height: 100%;
+                      background: linear-gradient(45deg, rgba(255,255,255,0) 45%, rgba(144,205,244,0.8) 50%,
+                        rgba(255,255,255,0) 55%,rgba(255,255,255,0) 100%);
+                      -webkit-background-clip: text;
+                      -webkit-text-fill-color: transparent;
+                      background-size: 200%;
+                      animation: shine 5s infinite;
+                    }
+                    
+                    @keyframes shine{
+                      0% {
+                        background-position: 0%;
+                      }
+
+                      100% {
+                        background-position: 200%;
+                      }
+                    }
+                    </style>
+                    
                 <a href="/" class="hover:text-blue-300 py-3"><li>HOME</li></a>
                 <a href="/lista" class="hover:text-blue-300 py-3"><li>LIST</li></a>
                 <a href="/wyslane" class="hover:text-blue-300 py-3"><li>SENT ATTACKS</li></a>

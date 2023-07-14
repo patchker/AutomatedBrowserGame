@@ -1,96 +1,107 @@
 {% include 'top.html' %}
 
-    <section>
-        <h1 class="text-blue-400 text-3xl py-4">SENT ATTACKS ({{ rekordy|length }})</h1>
-        <form id="delete_all" action="{{ url_for('wyslane_delete_all') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete all?');" class="mb-4">
-            <input class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700" type="submit" value="DELETE ALL">
+<section>
+  <h1 class="text-blue-400 text-3xl py-4">SENT ATTACKS ({{ rekordy|length }})</h1>
+  <form id="delete_all" action="{{ url_for('wyslane_delete_all') }}" method="POST"
+    onsubmit="return confirm('Are you sure you want to delete all?');" class="mb-4">
+    <input class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700" type="submit" value="DELETE ALL">
+  </form>
+
+  {% if rekordy %}
+  <table class="w-full text-center mb-4 border-collapse border border-gray-600 rounded-lg overflow-hidden">
+    <thead class="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0">
+
+      <th class="border border-gray-600 py-2 px-10">ID</th>
+      <th class="border border-gray-600 py-2 px-10">Type</th>
+      <th class="border border-gray-600 py-2 px-10">Attacker's Cords (XXX|YYY)</th>
+      <th class="border-0 py-2 px-10">Enemy Cords (XXX|YYY)</th>
+
+      <th class="border border-gray-600 py-2 px-10">TEMP(REMOVE)</th>
+      <th class="border border-gray-600 py-2 px-10">Date</th>
+      <th class="border border-gray-600 py-2 px-10">Units</th>
+      <th class="border border-gray-600 py-2 px-10">Delete</th>
+    </thead>
+    {% for rekord in rekordy %}
+    <tr id="row-{{ rekord[0] }}" class="text-white hover:bg-gray-700 transition-colors duration-200">
+      <td class="border border-gray-600 py-2  px-10">{{ rekord[0] }}</td>
+      <td class="border border-gray-600 py-2  px-10">{{ rekord[4] }}</td>
+      <td class="border border-gray-600 py-2  px-10">{{ rekord[1] }}</td>
+      <td class="border border-gray-600 py-2  px-10">{{ rekord[2] }}</td>
+      <td class="border border-gray-600 py-2  px-10">{{ rekord[5] }}</td>
+      <td class="border border-gray-600 py-2  px-10">{{ rekord[3] }}</td>
+      <td class="border border-gray-600 py-2 px-10">
+        <div class="tooltip">
+          {% if rekord[5] <= 1000 %} <img src="{{ url_for('static', filename='images/attack_small2.png') }}"
+            style="width: 36px; height: 36px;">
+            {% elif rekord[5] > 1000 and rekord[5]<=5000%} <img
+              src="{{ url_for('static', filename='images/attack_medium2.png') }}" style="width: 36px; height: 36px;">
+              {% elif rekord[5] > 5000%}
+              <img src="{{ url_for('static', filename='images/attack_large2.png') }}"
+                style="width: 36px; height: 36px;">
+              {% endif %}
+
+              <span class="tooltiptext">
+                <table>
+
+
+                  <tbody>
+                    <tr>
+                      {% for unit, count in rekord[6].items() %}
+                      <td>
+                        <span class="unit-count">
+                          <img src="{{ url_for('static', filename='images/'+ unit +'.png') }}" alt="{{ unit }}"
+                            style="width: 18px; height: 18px;">
+                          <span class="count"> : {{ count }}</span>
+                        </span>
+                      </td>
+                      {% endfor %}
+                    </tr>
+                  </tbody>
+                </table>
+
+              </span>
+        </div>
+      </td>
+
+
+
+
+
+
+      <td class="border border-gray-600 py-2  px-10">
+
+
+        <form class="delete-form" data-id="{{ rekord[0] }}" method="POST" style="display:inline;">
+          <button
+            class="border-2 btn-red border-red-500 hover:bg-red-500 text-red-500 hover:text-white font-bold py-2 px-4 rounded-2xl transition-all duration-100 ease-in-out transform hover:-translate-y-1 hover:scale-105 active:scale-90 shadow-lg cursor-pointer">
+            <i class="fa-solid fa-trash-can"></i></button>
         </form>
-<table class="w-full text-center mb-4 border-collapse border border-gray-600 rounded-lg overflow-hidden">
-    <thead class="bg-blue-500 text-white border-0">
 
-            <th class="border-0 py-2 px-10">ID</th>
-            <th class="border-0 py-2 px-10">Type</th>
-            <th class="border-0 py-2 px-10">Attacker's Cords (XXX|YYY)</th>
-            <th class="border-0 py-2 px-10">Enemy Cords (XXX|YYY)</th>
-
-            <th class="border-0 py-2 px-10">TEMP(REMOVE)</th>
-            <th class="border-0 py-2 px-10">Date</th>
-            <th class="border-0 py-2 px-10">Units</th>
-            <th class="border-0 py-2 px-10">Action</th>
-            </thead>
-        {% for rekord in rekordy %}
-            <tr id="row-{{ rekord[0] }}" class="text-white hover:bg-gray-700 transition-colors duration-200">
-                <td class="border border-gray-600 py-2  px-10">{{ rekord[0] }}</td>
-                <td class="border border-gray-600 py-2  px-10">{{ rekord[4] }}</td>
-                <td class="border border-gray-600 py-2  px-10">{{ rekord[1] }}</td>
-                <td class="border border-gray-600 py-2  px-10">{{ rekord[2] }}</td>
-                <td class="border border-gray-600 py-2  px-10">{{ rekord[5] }}</td>
-                <td class="border border-gray-600 py-2  px-10">{{ rekord[3] }}</td>
-<td class="border border-gray-600 py-2 px-10">
-  <div class="tooltip">
-    {% if rekord[5] <= 1000 %}
-  <img src="{{ url_for('static', filename='images/attack_small2.png') }}" style="width: 36px; height: 36px;">
-{% elif rekord[5] > 1000 and rekord[5]<=5000%}
-  <img src="{{ url_for('static', filename='images/attack_medium2.png') }}" style="width: 36px; height: 36px;">
-{% elif rekord[5] > 5000%}
-  <img src="{{ url_for('static', filename='images/attack_large2.png') }}" style="width: 36px; height: 36px;">
-{% endif %}
-
-    <span class="tooltiptext">
-      <table>
-
-
-        <tbody>
-          <tr>
-            {% for unit, count in rekord[6].items() %}
-              <td>
-                <span class="unit-count">
-                  <img src="{{ url_for('static', filename='images/'+ unit +'.png') }}" alt="{{ unit }}" style="width: 18px; height: 18px;">
-                  <span class="count"> : {{ count }}</span>
-                </span>
-              </td>
-            {% endfor %}
-          </tr>
-        </tbody>
-      </table>
-    </span>
-  </div>
-</td>
-
-
-
-
-
-
-                <td class="border border-gray-600 py-2  px-10">
-
-
-                    <form class="delete-form" data-id="{{ rekord[0] }}" method="POST" style="display:inline;">
-<input class=" border-2 btn-red border-red-500 hover:bg-red-500 text-red-500 hover:text-white font-bold py-2 px-4 rounded-2xl transition-all duration-100 ease-in-out transform hover:-translate-y-1 hover:scale-105 active:scale-90 shadow-lg cursor-pointer" type="submit" value="Delete">
-</form>
-
-                </td>
-            </tr>
-        {% endfor %}
-    </table>
-    </section>
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p class=" mt-20 w-full text-center text-xl">Brak rekordów do wyświetlenia.</p>
+  {% endif %}
+</section>
 
 <script>
-$(document).ready(function(){
-    $(".delete-form").on('click', function(e){
-        e.preventDefault();
-        var id = $(this).data('id');
-        $.ajax({
-            url: '/usun_wyslane/' + id,
-            type: 'POST',
-            success: function(result) {
-                $('#row-' + id).remove();
-            },
-            error: function(xhr, status, error) {
-                console.error('Error occurred:', error);
-            }
-        });
+  $(document).ready(function () {
+    $(".delete-form").on('click', function (e) {
+      e.preventDefault();
+      var id = $(this).data('id');
+      $.ajax({
+        url: '/usun_wyslane/' + id,
+        type: 'POST',
+        success: function (result) {
+          $('#row-' + id).remove();
+        },
+        error: function (xhr, status, error) {
+          console.error('Error occurred:', error);
+        }
+      });
     });
-});
+  });
 </script>
 {% include 'bottom.html' %}

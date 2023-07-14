@@ -1,61 +1,70 @@
 {% include 'top.html' %}
 
-    <section>
-        <h1 class="text-blue-400 text-3xl py-4">NOT SENT ATTACKS ({{ rekordy|length }})</h1>
-        <form id="delete_all" action="{{ url_for('niewyslane_delete_all') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete all?');" class="mb-4">
-            <input class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700" type="submit" value="DELETE ALL">
-        </form>
-<table class="w-full text-center mb-4 border-collapse border border-gray-600 rounded-lg overflow-hidden">
-    <thead class="bg-blue-500 text-white border-0">
-            <th class="border-0 px-10">ID</th>
-            <th class="border-0 px-10">Type</th>
-            <th class="border-0 px-10">Manual send</th>
-            <th class="border-0 px-10">Attacker's Cords (XXX|YYY)</th>
-            <th class="border-0 px-10">Enemy Cords (XXX|YYY)</th>
-            <th class="border-0 px-10">Date</th>
-            <th class="border-0 px-10">Reason</th>
-            <th class="border-0 px-10">Action</th>
-    </thead>
+<section>
+    <h1 class="text-blue-400 text-3xl py-4">NOT SENT ATTACKS ({{ rekordy|length }})</h1>
+    <form id="delete_all" action="{{ url_for('niewyslane_delete_all') }}" method="POST"
+        onsubmit="return confirm('Are you sure you want to delete all?');" class="mb-4">
+        <input class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700" type="submit" value="DELETE ALL">
+    </form>
+    {% if rekordy %}
+    <table class="w-full text-center mb-4 border-collapse border border-gray-600 rounded-lg overflow-hidden">
+        <thead class="bg-gradient-to-r from-blue-500 to-blue-600 text-white border-0">
+            <th class="border border-gray-600 py-2 px-10">ID</th>
+            <th class="border border-gray-600 py-2 px-10">Type</th>
+            <th class="border border-gray-600 py-2 px-10">Manual send</th>
+            <th class="border border-gray-600 py-2 px-10">Attacker's Cords (XXX|YYY)</th>
+            <th class="border border-gray-600 py-2 px-10">Enemy Cords (XXX|YYY)</th>
+            <th class="border border-gray-600 py-2 px-10">Date</th>
+            <th class="border border-gray-600 py-2 px-10">Reason</th>
+            <th class="border border-gray-600 py-2 px-10">Action</th>
+        </thead>
         {% for rekord in rekordy %}
-            <tr id="row-{{ rekord[0] }}" class="text-white hover:bg-gray-700 transition-colors duration-200">
-                <td class="border border-gray-600 py-2  px-10">{{ rekord[0] }}</td>
-                <td class="border border-gray-600 py-2  px-10"><a href="{{ rekord[6] }}">Wyślij atak</a></td>
-                <td class="border border-gray-600 py-2  px-10">{{ rekord[4] }}</td>
-                <td class="border border-gray-600 py-2  px-10">{{ rekord[1] }}</td>
-                <td class="border border-gray-600 py-2  px-10">{{ rekord[2] }}</td>
-                <td class="border border-gray-600 py-2  px-10">{{ rekord[3] }}</td>
-                <td class="border border-gray-600 py-2  px-10">{{ rekord[5] }}</td>
+        <tr id="row-{{ rekord[0] }}" class="text-white hover:bg-gray-700 transition-colors duration-200">
+            <td class="border border-gray-600 py-2  px-10">{{ rekord[0] }}</td>
+            <td class="border border-gray-600 py-2  px-10"><a href="{{ rekord[6] }}">Wyślij atak</a></td>
+            <td class="border border-gray-600 py-2  px-10">{{ rekord[4] }}</td>
+            <td class="border border-gray-600 py-2  px-10">{{ rekord[1] }}</td>
+            <td class="border border-gray-600 py-2  px-10">{{ rekord[2] }}</td>
+            <td class="border border-gray-600 py-2  px-10">{{ rekord[3] }}</td>
+            <td class="border border-gray-600 py-2  px-10">{{ rekord[5] }}</td>
 
-                <td class="border border-gray-600 py-2  px-10">
-                    <form action="{{ url_for('restore', id=rekord[0]) }}" method="POST" style="display:inline;">
-<input class="border-2 btn-blue border-blue-500 hover:bg-blue-500 text-blue-500 hover:text-white font-bold py-2 px-4 rounded-2xl transition-all duration-100 ease-in-out transform hover:-translate-y-1 hover:scale-105 active:scale-90 shadow-lg cursor-pointer" type="submit" value="Restore">
-                    </form>
-                    <form  class="delete-form" data-id="{{ rekord[0] }}" method="POST" style="display:inline;">
-<input class=" border-2 btn-red border-red-500 hover:bg-red-500 text-red-500 hover:text-white font-bold py-2 px-4 rounded-2xl transition-all duration-100 ease-in-out transform hover:-translate-y-1 hover:scale-105 active:scale-90 shadow-lg cursor-pointer" type="submit" value="Delete">
-                    </form>
-                </td>
-            </tr>
+            <td class="border border-gray-600 py-2  px-10">
+                <form action="{{ url_for('restore', id=rekord[0]) }}" method="POST" style="display:inline;">
+                    <input
+                        class="border-2 btn-blue border-blue-500 hover:bg-blue-500 text-blue-500 hover:text-white font-bold py-2 px-4 rounded-2xl transition-all duration-100 ease-in-out transform hover:-translate-y-1 hover:scale-105 active:scale-90 shadow-lg cursor-pointer"
+                        type="submit" value="Restore">
+                </form>
+                <form class="delete-form" data-id="{{ rekord[0] }}" method="POST" style="display:inline;">
+                    <input
+                        class=" border-2 btn-red border-red-500 hover:bg-red-500 text-red-500 hover:text-white font-bold py-2 px-4 rounded-2xl transition-all duration-100 ease-in-out transform hover:-translate-y-1 hover:scale-105 active:scale-90 shadow-lg cursor-pointer"
+                        type="submit" value="Delete">
+                </form>
+            </td>
+        </tr>
         {% endfor %}
     </table>
-    </section>
+    {% else %}
+    <p class=" mt-20 w-full text-center text-xl">Brak rekordów do wyświetlenia.</p>
+    {% endif %}
+</section>
 
 <script>
-$(document).ready(function(){
-    $(".delete-form").on('click', function(e){
-        e.preventDefault();
-        var id = $(this).data('id');
-        $.ajax({
-            url: '/usun_niewyslane/' + id,
-            type: 'POST',
-            success: function(result) {
-                $('#row-' + id).remove();
-            },
-            error: function(xhr, status, error) {
-                console.error('Error occurred:', error);
-            }
+    $(document).ready(function () {
+        $(".delete-form").on('click', function (e) {
+            e.preventDefault();
+            var id = $(this).data('id');
+            $.ajax({
+                url: '/usun_niewyslane/' + id,
+                type: 'POST',
+                success: function (result) {
+                    $('#row-' + id).remove();
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error occurred:', error);
+                }
+            });
         });
     });
-});
 </script>
 
 {% include 'bottom.html' %}

@@ -819,6 +819,7 @@ def edytuj(id):
         parametr2 = request.form.get('parametr2')
         parametr3 = request.form.get('parametr3')
         parametr4 = request.form.get('parametr4')
+        parametr7 = request.form.get('parametr7')
         parametr8 = request.form.get('parametr8')
         parametr9 = request.form.get('parametr9')
 
@@ -844,8 +845,8 @@ def edytuj(id):
             miliseconds += '0'
         parametr3 = dt.strftime("%Y-%m-%dT%H:%M:%S.") + miliseconds
 
-        c.execute("UPDATE data SET parametr1=?, parametr2=?, parametr3=?, parametr4=?, parametr8=?, parametr9=? WHERE id=?",
-                  (parametr1, parametr2, parametr3, parametr4, parametr8, parametr9, id))
+        c.execute("UPDATE data SET parametr1=?, parametr2=?, parametr3=?, parametr4=?, parametr7=?, parametr8=?, parametr9=? WHERE id=?",
+                  (parametr1, parametr2, parametr3, parametr4, parametr7, parametr8, parametr9, id))
         conn.commit()
         conn.close()
         return redirect(url_for('lista'))
@@ -1250,11 +1251,11 @@ def burzak_units(units, number):
     return units_chosen
 
 
+
 def grubas_units(posiadane, limit):
     unit_size = {'spear': 1, 'sword': 1, 'axe': 1, 'archer': 1, 'spy': 2, 'light': 4, 'marcher': 5, 'heavy': 6, 'ram': 5, 'catapult': 8, 'knight' :10, 'snob': 100}
     unit_order = [['axe', 'light', 'ram', 'marcher'], ['heavy'], ['spear', 'sword', 'archer']]
 
-    # inicjalizacja units_chosen wszystkimi jednostkami z zerowymi wartościami
     units_chosen = {unit: 0 for unit in unit_size}
 
     if 'snob' in posiadane and posiadane['snob'] > 0:
@@ -1265,27 +1266,30 @@ def grubas_units(posiadane, limit):
         return False, "Brak jednostki 'snob' do dodania do ataku."
 
     total_units = sum(posiadane[unit]*unit_size[unit] for unit in posiadane)
-    if total_units < 0.7*limit: # zmieniamy na 70%
-        return False, "Dostępne jednostki stanowią mniej niż 70% limitu."
+    if total_units < limit:
+        if total_units >= 0.7*limit:
+            limit = total_units
+        else:
+            return False, "Dostępne jednostki stanowią mniej niż 70% limitu."
 
     for unit_group in unit_order:
-        group_units = [unit for unit in unit_group if unit in posiadane and posiadane[unit] > 0]  # only consider units that exist in posiadane
-        if not group_units:  # if there are no units in this group, skip
+        group_units = [unit for unit in unit_group if unit in posiadane and posiadane[unit] > 0]
+        if not group_units:
             continue
-        while limit >= min(unit_size[unit] for unit in group_units):  # as long as there's room for the smallest unit in the group
-            for unit in sorted(group_units, key=lambda x: -unit_size[x]):  # starting from the largest
-                if limit < unit_size[unit]:  # if there's no room for this unit, go to the next one
-                    continue
-                units_to_add = min(limit // unit_size[unit], posiadane[unit])  # either as many as can fit, or as many as are available
-                units_chosen[unit] += units_to_add
-                posiadane[unit] -= units_to_add
-                limit -= units_to_add * unit_size[unit]
+
+        group_total_size = sum(posiadane[unit]*unit_size[unit] for unit in group_units)
+        group_limit = min(group_total_size, limit)
+
+        group_units_count = sum(posiadane[unit]*unit_size[unit] for unit in group_units)
+        for unit in group_units:
+            unit_share = posiadane[unit]*unit_size[unit] / group_units_count
+            unit_limit = int(unit_share * group_limit)
+            units_to_take = min(unit_limit // unit_size[unit], posiadane[unit])
+            units_chosen[unit] += units_to_take
+            posiadane[unit] -= units_to_take
+            limit -= units_to_take * unit_size[unit]
+
     return units_chosen
-
-
-
-
-
 
 
 
@@ -1361,7 +1365,7 @@ def test_send(source_village, target_coords, target_id, attacktype,units_to_send
 
 
 
-    input_element = soup.find('input', {'name': '6890717f4d46c2ecf6952e'})
+    input_element = soup.find('input', {'name': 'f898ec5ef65c367e1d4fad'})
     value = input_element['value']
 
     print("[GET] ", url)

@@ -1,30 +1,31 @@
 {% include 'top.html' %}
 <div class="flex flex-col items-center justify-center py-6">
+
     <h1 class="text-white text-4xl mb-4">Scheduled Attacks</h1>
     <div class="grid grid-cols-6 gap-4 text-center">
-        <div class="bg-blue-500 p-4 rounded-lg shadow flex flex-col">
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600  p-4 rounded-lg shadow-md flex flex-col">
             <div class="text-white text-2xl">{{ rekordy|length }}</div>
-            <p class="text-blue-700">Total</p>
+            <p class="text-blue-900 font-bold">Total</p>
         </div>
-        <div class="bg-blue-500 p-4 rounded-lg shadow flex flex-col">
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600  p-4 rounded-lg shadow-md flex flex-col">
             <div class="text-white text-2xl">{{ licznik_typow_atakow['FAKE'] }}</div>
-            <p class="text-blue-700">Fake</p>
+            <p class="text-blue-900 font-bold">Fake</p>
         </div>
-        <div class="bg-blue-500 p-4 rounded-lg shadow flex flex-col">
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600  p-4 rounded-lg shadow-md flex flex-col">
             <div class="text-white text-2xl">{{ licznik_typow_atakow['OFF'] }}</div>
-            <p class="text-blue-700">Off</p>
+            <p class="text-blue-900 font-bold">Off</p>
         </div>
-        <div class="bg-blue-500 p-4 rounded-lg shadow flex flex-col">
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600  p-4 rounded-lg shadow-md flex flex-col">
             <div class="text-white text-2xl">{{ licznik_typow_atakow['BURZAK'] }}</div>
-            <p class="text-blue-700">Burzak</p>
+            <p class="text-blue-900 font-bold">Burzak</p>
         </div>
-        <div class="bg-blue-500 p-4 rounded-lg shadow flex flex-col">
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600  p-4 rounded-lg shadow-md flex flex-col">
             <div class="text-white text-2xl">{{ licznik_typow_atakow['FAKE SZLACHCIC'] }}</div>
-            <p class="text-blue-700">Fake Szlachcic</p>
+            <p class="text-blue-900 font-bold">Fake Szlachcic</p>
         </div>
-        <div class="bg-blue-500 p-4 rounded-lg shadow flex flex-col">
+        <div class="bg-gradient-to-r from-blue-500 to-blue-600  p-4 rounded-lg shadow-md flex flex-col">
             <div class="text-white text-2xl">{{ licznik_typow_atakow['SZLACHCIC'] }}</div>
-            <p class="text-blue-700">Szlachcic</p>
+            <p class="text-blue-900 font-bold">Szlachcic</p>
         </div>
     </div>
 </div>
@@ -33,178 +34,235 @@
 
 
 
-
-        <section>
-
-
-<div class="relative inline-block w-64">
-    <button class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 w-full mb-5">DELETE SOME DATA</button>
-    <div class="absolute left-0 mt-1 py-2 w-full bg-transparent rounded-lg shadow-xl hidden" id="dropdown">
-        <form action="{{ url_for('lista_delete_all') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete all data?');">
-            <input class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 block px-4 py-2 text-sm w-full" type="submit" value="DELETE ALL">
+<div class="relative inline-block w-64 mt-10">
+    <div class="flex justify-between mb-5">
+        <button
+            class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 whitespace-nowrap mr-5 show-dropdown">DELETE
+            SOME DATA</button>
+        <form action="{{ url_for('save') }}" method="GET">
+            <input class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 mr-5" type="submit"
+                value="Add new record">
         </form>
-        <form action="{{ url_for('burzaki_delete_all') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete all burzaki?');">
-            <input class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 block px-4 py-2 text-sm w-full" type="submit" value="DELETE ALL BURZAKI">
+        <form action="{{ url_for('massadding') }}" method="GET">
+            <input class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 mr-5" type="submit"
+                value="Add multiple records">
         </form>
-        <form action="{{ url_for('grubasy_delete_all') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete all grubasy?');">
-            <input class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 block px-4 py-2 text-sm w-full" type="submit" value="DELETE ALL SZLACHCIE">
+    </div>
+    <div class="absolute left-0 top-full w-full bg-transparent rounded-lg shadow-xl hidden" id="dropdown">
+        <form action="{{ url_for('lista_delete_all') }}" method="POST"
+            onsubmit="return confirm('Are you sure you want to delete all data?');">
+            <input
+                class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 block  border-b-2 border-black text-sm w-full"
+                type="submit" value="DELETE ALL">
         </form>
-        <form action="{{ url_for('fejkgrubasy_delete_all') }}" method="POST" onsubmit="return confirm('Are you sure you want to delete all fejk grubasy?');">
-            <input class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 block px-4 py-2 text-sm w-full" type="submit" value="DELETE ALL FEJK SZLACHCIE">
+        <form action="{{ url_for('burzaki_delete_all') }}" method="POST"
+            onsubmit="return confirm('Are you sure you want to delete all burzaki?');">
+            <input
+                class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 block border-b-2 border-black text-sm w-full"
+                type="submit" value="DELETE ALL BURZAKI">
+        </form>
+        <form action="{{ url_for('grubasy_delete_all') }}" method="POST"
+            onsubmit="return confirm('Are you sure you want to delete all grubasy?');">
+            <input
+                class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 block border-b-2 border-black text-sm w-full"
+                type="submit" value="DELETE ALL SZLACHCIE">
+        </form>
+        <form action="{{ url_for('fejkgrubasy_delete_all') }}" method="POST"
+            onsubmit="return confirm('Are you sure you want to delete all fejk grubasy?');">
+            <input
+                class="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700 block border-b-2 border-black text-sm w-full"
+                type="submit" value="DELETE ALL FEJK SZLACHCIE">
         </form>
     </div>
 </div>
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-<script>
-    $(document).ready(function(){
-        $('button').click(function(){
-            $('#dropdown').toggleClass('hidden');
-        });
-    });
-</script>
 
 
 
+
+
+{% if rekordy %}
 <table class="w-full text-center mb-4 border-collapse border border-gray-600 rounded-lg overflow-hidden">
-    <thead class="bg-blue-500 text-white">
+    <thead class="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
         <tr>
             <th class="border border-gray-600 py-2 px-4">ID</th>
             <th class="border border-gray-600 py-2 px-4">Manual send</th>
             <th class="border border-gray-600 py-2 px-4">Type</th>
             <th class="border border-gray-600 py-2 px-4">Attacker's Cords (XXX|YYY)</th>
             <th class="border border-gray-600 py-2 px-4">Enemy Cords (XXX|YYY)</th>
-            <th class="border border-gray-600 py-2 px-4">massorsingle</th>
+            <!--<th class="border border-gray-600 py-2 px-4">massorsingle</th>-->
             <th class="border border-gray-600 py-2 px-4">units</th>
             <th class="border border-gray-600 py-2 px-4">Date</th>
             <th class="border border-gray-600 py-2 px-4">Source ID</th>
             <th class="border border-gray-600 py-2 px-4">Target ID</th>
 
-            
+
             <th class="border border-gray-600 py-2 px-4">Start</th>
-            <th class="border border-gray-600 py-2 px-4">Action</th>
+            <!--<th class="border border-gray-600 py-2 px-4">Edit</th>-->
+            <th class="border border-gray-600 py-2 px-4">Delete</th>
+
 
         </tr>
     </thead>
     <tbody>
-    {% for rekord in rekordy %}
-        <tr id="row-{{ rekord[0] }}" class="text-white hover:bg-gray-700 transition-colors duration-200">
+        {% for rekord in rekordy %}
+        <tr id="row-{{ rekord[0] }}"
+            class="text-white hover:bg-gray-700 hover:cursor-pointer transition-colors duration-200"
+            data-edit-url="{{ url_for('edytuj', id=rekord[0]) }}">
             <td class="border border-gray-600 py-2 px-4">{{ rekord[0] }}</td>
             <td class="border border-gray-600 py-2  px-4">
                 {% if rekord[6] == '1' %}
-                    <a class="text-blue-400 hover:text-blue-300" target="_blank" href="{{ rekord[5] }}">Wyślij atak</a>
+                <a class="text-blue-400 hover:text-blue-300" target="_blank" href="{{ rekord[5] }}">Wyślij atak</a>
                 {% else %}
-                    Brak URL
+                Brak URL
                 {% endif %}
             </td>
             <td class="border border-gray-600 py-2  px-4">{{ rekord[4] }}</td>
             <td class="border border-gray-600 py-2  px-4">{{ rekord[1] }}</td>
-            <td class="border border-gray-600 py-2 px-4" >{{ rekord[2] }}</td>
-            <td class="border border-gray-600 py-2 px-4">{{ rekord[6] }}</td>
+            <td class="border border-gray-600 py-2 px-4">{{ rekord[2] }}</td>
+            <!--<td class="border border-gray-600 py-2 px-4">{{ rekord[6] }}</td>-->
             <td class="border border-gray-600 py-2 px-4">{{ rekord[7] }}</td>
 
-            <td class="border border-gray-600 py-2 px-4">{{ rekord[3] }}</td>
+            <td class="border border-gray-600 py-2 px-4">{{rekord[3]}}
+            </td>
+
             <td class="border border-gray-600 py-2 px-4">{{ rekord[8] }}</td>
             <td class="border border-gray-600 py-2 px-4">{{ rekord[9] }}</td>
-            <td class="border border-gray-600 py-2 px-4 d-flex justify-content-center align-items-center" style="position: relative;">
-                <div id="loader-container" style="position: absolute; top: 0; bottom: 0; left: 0; right: 0; display: flex; justify-content: center; align-items: center;">
-                    <img id="loader" src="../static/images/loader.gif" width="20px" style="display: none;">
-                </div>
-                <span id="results"></span>
-                <form class="start-form inline-block" action="{{ url_for('elo', id1=rekord[8],  id2=rekord[9], target_coords = rekord[2], attacktype=rekord[4],units_to_send=rekord[7])}}" method="GET">
-                    <input id="start" class="border-2 btn-blue border-blue-500 hover:bg-blue-500 text-blue-500 hover:text-white font-bold py-2 px-4 rounded-2xl transition-all duration-100 ease-in-out transform hover:-translate-y-1 hover:scale-105 active:scale-90 shadow-lg cursor-pointer" type="submit" value="Start">
+            <td class="border border-gray-600 py-2 px-4 d-flex justify-content-center align-items-center"
+                style="position: relative;">
+
+                <span class="results"></span>
+                <form class="start-form inline-block"
+                    action="{{url_for('elo', id1=rekord[8], id2=rekord[9], target_coords=rekord[2], attacktype=rekord[4], units_to_send=rekord[7])}}"
+                    onclick="event.stopPropagation();">
+                    <button
+                        class="border-2 btn-blue border-blue-500 hover:bg-blue-500 text-blue-500 hover:text-white font-bold py-2 px-4 rounded-2xl transition-all duration-100 ease-in-out transform hover:-translate-y-1 hover:scale-105 active:scale-90 shadow-lg cursor-pointer">
+                        <i class="fa-solid fa-circle-play"></i>
+
+                    </button>
                 </form>
             </td>
-            
-            
-            
-                           
-                            
+
+
+
+
+            <!--               
             <td class="border border-gray-600 py-2 px-4">
                 <form class="edit-form inline-block" action="{{ url_for('edytuj', id=rekord[0]) }}" method="GET">
-<input class="border-2 btn-blue border-blue-500 hover:bg-blue-500 text-blue-500 hover:text-white font-bold py-2 px-4 rounded-2xl transition-all duration-100 ease-in-out transform hover:-translate-y-1 hover:scale-105 active:scale-90 shadow-lg cursor-pointer" type="submit" value="Edit">
-
+                    <button class="border-2 btn-blue border-blue-500 hover:bg-blue-500 text-blue-500 hover:text-white font-bold py-2 px-4 rounded-2xl transition-all duration-100 ease-in-out transform hover:-translate-y-1 hover:scale-105 active:scale-90 shadow-lg cursor-pointer"> <i class="fa-solid fa-pen-to-square"></i></button>
                 </form>
-                <form class="delete-form inline-block" data-id="{{ rekord[0] }}" method="POST">
-<input class=" border-2 btn-red border-red-500 hover:bg-red-500 text-red-500 hover:text-white font-bold py-2 px-4 rounded-2xl transition-all duration-100 ease-in-out transform hover:-translate-y-1 hover:scale-105 active:scale-90 shadow-lg cursor-pointer" type="submit" value="Delete">
+            </td>
+            -->
+            <td class="border border-gray-600 py-2 px-4">
+
+                <form class="delete-form inline-block" data-id="{{ rekord[0] }}" method="POST"
+                    onclick="event.stopPropagation();">
+                    <button
+                        class="border-2 btn-red border-red-500 hover:bg-red-500 text-red-500 hover:text-white font-bold py-2 px-4 rounded-2xl transition-all duration-100 ease-in-out transform hover:-translate-y-1 hover:scale-105 active:scale-90 shadow-lg cursor-pointer">
+                        <i class="fa-solid fa-trash-can"></i></button>
+
                 </form>
             </td>
         </tr>
-    {% endfor %}
+        {% endfor %}
     </tbody>
 </table>
+{% else %}
+<p class=" mt-20 w-full text-center text-xl">Brak rekordów do wyświetlenia.</p>
+{% endif %}
 
-        <div class="flex justify-between">
-            <form action="{{ url_for('save') }}" method="GET">
-                <input class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600" type="submit" value="Add new record">
-            </form>
-            <form action="{{ url_for('massadding') }}" method="GET">
-                <input class="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600" type="submit" value="Add multiple records">
-            </form>
-        </div>
-    </section>
+
+
+
+
 <script>
+    $(document).ready(function () {
+        $('.show-dropdown').click(function () {
+            $('#dropdown').toggleClass('hidden');
+        });
 
 
 
-$(document).ready(function(){
-   $(".delete-form").on('click', function(e){
-        e.preventDefault();
-        var id = $(this).data('id');
-        $.ajax({
-            url: '/usun/' + id,
-            type: 'POST',
-            success: function(result) {
-                $('#row-' + id).remove();
-            },
-            error: function(xhr, status, error) {
-                console.error('Error occurred:', error);
+        $(".delete-form").on('click', function (e) {
+            e.preventDefault();
+            var id = $(this).data('id');
+            $.ajax({
+                url: '/usun/' + id,
+                type: 'POST',
+                success: function (result) {
+                    $('#row-' + id).remove();
+                },
+                error: function (xhr, status, error) {
+                    console.error('Error occurred:', error);
+                }
+            });
+        });
+
+        var rows = $("table tr");
+        for (var i = 1; i < rows.length - 1; i++) {  // Rozpocznij od 1, aby pominąć nagłówki tabeli
+            var date1Cell = $(rows[i]).find("td")[4];  // Znajdź komórkę z datą
+            var date1 = new Date(date1Cell.textContent);
+            var date2Cell = $(rows[i + 1]).find("td")[4];  // Znajdź komórkę z datą w następnym wierszu
+            var date2 = new Date(date2Cell.textContent);
+
+            var diffInMilliseconds = Math.abs(date2 - date1);
+            var diffInMinutes = diffInMilliseconds / 1000 / 60;
+
+            if (diffInMinutes < 1) {
+                $(rows[i]).find('td').css('background-color', '#FF7F7F');
+                $(rows[i + 1]).find('td').css('background-color', '#FF7F7F');
             }
-        });
-    });
-
-    var rows = $("table tr");
-    for (var i = 1; i < rows.length - 1; i++) {  // Rozpocznij od 1, aby pominąć nagłówki tabeli
-        var date1Cell = $(rows[i]).find("td")[4];  // Znajdź komórkę z datą
-        var date1 = new Date(date1Cell.textContent);
-        var date2Cell = $(rows[i + 1]).find("td")[4];  // Znajdź komórkę z datą w następnym wierszu
-        var date2 = new Date(date2Cell.textContent);
-
-        var diffInMilliseconds = Math.abs(date2 - date1);
-        var diffInMinutes = diffInMilliseconds / 1000 / 60;
-
-        if (diffInMinutes < 1) {
-            $(rows[i]).find('td').css('background-color', '#FF7F7F');
-            $(rows[i + 1]).find('td').css('background-color', '#FF7F7F');
         }
-    }
-});
-</script>
-<script>
-$(document).ready(function(){
-    $(".start-form").off('submit').on('submit', function(e){
-        e.preventDefault();  // prevent the form from 'submitting'
-        let actionUrl = e.target.action;  // Get the form action url
-        $("#loader").css("display", "block");  // Show the loader
-        $(this).hide(); // Hide only the form that was submitted
-        $.get(actionUrl, function(data, status){
-            $("#loader").css("display", "none");  // Hide the loader
-            var resultImage = data.success ? "../static/images/success.png" : "../static/images/failure.png";
-            var newRow = '<tr><td><img class="result-image" src="' + resultImage + '" width="20px"></td></tr>';
-            $("#results").append(newRow);
-            $(".result-image").show();
-        }).fail(function() {
-            // handle request failures
-            $("#loader").css("display", "none");  // Hide the loader
-            var resultImage = "../static/images/failure.png";
-            var newRow = '<tr><td><img class="result-image" src="' + resultImage + '" width="20px"></td></tr>';
-            $("#results").append(newRow);
-            $(".result-image").show();
+
+
+
+        $(".start-form").on('submit', function (e) {
+            e.preventDefault();  // prevent the form from 'submitting'
+
+            var $form = $(this);
+            var $results = $form.parent().find(".results");
+
+            var actionUrl = $form.attr("action");  // Get the form action URL
+
+            // Add the loader
+            var $loader = $('<div style="display: flex; justify-content: center;"><img class="loader" src="../static/images/loader.gif" width="20px"></div>');
+            $form.before($loader);
+
+            $form.hide();  // Hide the form that was submitted
+
+            $.get(actionUrl, function (data, status) {
+
+                $loader.remove();  // Remove the loader
+
+                var resultImage = data.success ? "../static/images/success.png" : "../static/images/failure.png";
+                var newRow = '<tr><td><img class="result-image" src="' + resultImage + '" width="20px"></td></tr>';
+                $results.append(newRow);
+                $results.find(".result-image").show();
+            }).fail(function () {
+                // Handle request failures
+                $loader.remove();  // Remove the loader
+
+                var resultImage = "../static/images/failure.png";
+                var newRow = '<tr><td><img class="result-image" src="' + resultImage + '" width="20px"></td></tr>';
+                $results.append(newRow);
+                $results.find(".result-image").show();
+            });
         });
+
+        document.querySelectorAll('tbody tr').forEach(row => {
+            row.addEventListener('click', () => {
+                window.location.href = row.dataset.editUrl;
+            });
+        });
+
+
     });
-});
+
 
 
 </script>
+
+
+
 
 {% include 'bottom.html' %}
